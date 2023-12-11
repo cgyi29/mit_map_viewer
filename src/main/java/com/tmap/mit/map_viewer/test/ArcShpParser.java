@@ -1,54 +1,49 @@
 package com.tmap.mit.map_viewer.test;
 
+import com.tmap.mit.map_viewer.dto.Point;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 
-import java.io.FileInputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
-public class PointShpParser {
+public class ArcShpParser {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        List<Point> points = new ArrayList<>();
         ClassPathResource resource = new ClassPathResource("files/Duraklar.shp");
-        try (FileInputStream fis = new FileInputStream(resource.getFile());
-             FileChannel channel = fis.getChannel()) {
+        try (InputStream is = resource.getInputStream();
+             BufferedInputStream bis = new BufferedInputStream(is)) {
 
-            // shapefile header read
-            ByteBuffer buffer = ByteBuffer.allocate(100);
+            byte[] header = new byte[100];
+            bis.read(header);
+            ByteBuffer buffer = ByteBuffer.wrap(header);
             buffer.order(ByteOrder.BIG_ENDIAN);
 
-            channel.read(buffer);
-            buffer.flip();
-            buffer.position(100);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            while (bis.available() > 0) {
+                byte[] recordHeader = new byte[8];
+                bis.read(recordHeader);
+                ByteBuffer recordBuffer = ByteBuffer.wrap(recordHeader);
+                recordBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
-            while(channel.position() < channel.size()){
-                buffer.clear();
-                channel.read(buffer);
-                buffer.flip();
+                byte[] pointData = new byte[16];
 
-                while (buffer.remaining() > 8){
-                    buffer.getInt();
-                    int contentLength = buffer.getInt() * 2;
+                bis.read(pointData);
+                ByteBuffer pointBuffer = ByteBuffer.wrap(pointData).order(ByteOrder.LITTLE_ENDIAN);
 
-                    buffer.order(ByteOrder.LITTLE_ENDIAN);
-                    int shapeType = buffer.getInt();
+                double x = pointBuffer.getDouble();
+                double y = pointBuffer.getDouble();
 
-                    if(shapeType == 1 && buffer.remaining() >= 20){
-                        double x = buffer.getDouble();
-                        double y = buffer.getDouble();
-
-                        log.info("Point x ::: {}, Point y ::: {}", x, y);
-                    }
-
-                    buffer.order(ByteOrder.BIG_ENDIAN);
-                }
+                points.add(Point.builder().x(x).y(y).build());
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+
+        points.stream().count();
     }
 }

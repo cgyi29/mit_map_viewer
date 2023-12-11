@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class MapDataResponse {
-    private String id;
-    private String type;
+public class Point {
+
+    double x,y;
 }

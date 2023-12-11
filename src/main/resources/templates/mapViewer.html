@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/html" lang="en">
+    <th:head>
+        <script th:inline="javascript">
+            async function drawPoint(){
+                const response = await fetch('/mapData/Duraklar');
+                const points = await response.json();
+
+                const myCanvas = document.getElementById('myCanvas');
+                if(myCanvas.getContext){
+                    const ctx = myCanvas.getContext('2d');
+
+                    points.forEach(point => {
+                        let transformPoint = transformCoordinates(point, myCanvas);
+                        ctx.beginPath();
+                        ctx.arc(transformPoint.x, transformPoint.y, 2, 0, 2 * Math.PI);
+                        ctx.fill();
+                    });
+                }
+            }
+
+            function transformCoordinates(point, canvas){
+                const maxX = 1000;
+                const maxY = 1000;
+                const minX = 0;
+                const minY = 0;
+
+                let transformX = (point.x - minX) / (maxX - minX) * canvas.width;
+                let transformY = (point.y - minY) / (maxY - minY) * canvas.height;
+
+                return {x : transformX, y: transformY};
+            }
+
+            window.onload = drawPoint();
+        </script>
+    </th:head>
+    <th:body>
+        <canvas id="myCanvas" width="800" height="500" style="border:1px solid"></canvas>
+
+    </th:body>
+
+</html>

@@ -1,16 +1,15 @@
-package com.tmap.mit.map_viewer;
+package com.tmap.mit.map_viewer.test;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
 @Slf4j
-public class Parser {
+public class PointShpParser {
 
     public static void main(String[] args) {
         ClassPathResource resource = new ClassPathResource("files/Duraklar.shp");
@@ -37,7 +36,7 @@ public class Parser {
                     buffer.order(ByteOrder.LITTLE_ENDIAN);
                     int shapeType = buffer.getInt();
 
-                    if(shapeType == 1 && buffer.remaining() >= 20){
+                    if(buffer.remaining() >= 20){
                         double x = buffer.getDouble();
                         double y = buffer.getDouble();
 
