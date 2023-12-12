@@ -4,14 +4,16 @@
         <script th:inline="javascript">
             async function drawPoint(){
                 const response = await fetch('/mapData/Duraklar');
-                const points = await response.json();
+                const shapeData = await response.json();
+                const bbox = await shapeData.bbox;
+                const coordinates = await shapeData.coordinates;
 
-                const myCanvas = document.getElementById('myCanvas');
+                const myCanvas = document.getElementById('mapCanvas');
                 if(myCanvas.getContext){
                     const ctx = myCanvas.getContext('2d');
 
-                    points.forEach(point => {
-                        let transformPoint = transformCoordinates(point, myCanvas);
+                    coordinates.forEach(coordinate => {
+                        let transformPoint = transformCoordinates(coordinate.x, coordinate.y, bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, myCanvas);
                         ctx.beginPath();
                         ctx.arc(transformPoint.x, transformPoint.y, 2, 0, 2 * Math.PI);
                         ctx.fill();
@@ -19,14 +21,9 @@
                 }
             }
 
-            function transformCoordinates(point, canvas){
-                const maxX = 1000;
-                const maxY = 1000;
-                const minX = 0;
-                const minY = 0;
-
-                let transformX = (point.x - minX) / (maxX - minX) * canvas.width;
-                let transformY = (point.y - minY) / (maxY - minY) * canvas.height;
+            function transformCoordinates(x, y, minX, minY, maxX, maxY, canvas){
+                let transformX = (x - minX) / (maxX - minX) * canvas.width;
+                let transformY = (y - minY) / (maxY - minY) * canvas.height;
 
                 return {x : transformX, y: transformY};
             }
@@ -35,7 +32,7 @@
         </script>
     </th:head>
     <th:body>
-        <canvas id="myCanvas" width="800" height="500" style="border:1px solid"></canvas>
+        <canvas id="mapCanvas" width="800" height="500" style="border:1px solid"></canvas>
 
     </th:body>
 

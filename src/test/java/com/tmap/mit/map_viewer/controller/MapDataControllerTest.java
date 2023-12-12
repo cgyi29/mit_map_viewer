@@ -1,6 +1,6 @@
 package com.tmap.mit.map_viewer.controller;
 
-import com.tmap.mit.map_viewer.dto.MapDataResponse;
+import com.tmap.mit.map_viewer.dto.ShapeData;
 import com.tmap.mit.map_viewer.service.MapDataService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ class MapDataControllerTest {
     @Test
     void createByShapeFile(){
         when(mapDataService.createByShapeFile(POINT_FILE_NAME)).thenReturn(
-                Flux.just(MapDataResponse.builder().build())
+                Flux.just(ShapeData.builder().build())
         );
 
         webTestClient.get().uri(String.format(URI_PATH_FORMAT, POINT_FILE_NAME))
