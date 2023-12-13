@@ -45,8 +45,13 @@ sequenceDiagram
     * givenFileName_whenGetMapDataByShapeFile_thenResponseCheck
       
       response status이 200인지 정도만 체크중임
+      
 
 ## 프로젝트 1차 회고 (진행 1주차)
-
+1. QGIS 프로그램에서 세가지 파일(shp/dbf/shx)을 통해 읽어오는 정보들이 각각 어떤 데이터인지 대략적인 정보를 알게 됨
+2. 현재 진행중인 shp 파일 파싱하여 view에 뿌려주는 작업을 통해서 어떤 데이터를 추출해야 view에서 유의미하게 사용할 수 있을지 알게됨.
+3. shp 파일 구조에 대해서 이해하게 됨.
+4. 현재 구조상 view에서 좌표 값 변환 작업을 하여 canvas에 맞춰진 지도 데이터를 뿌려주고 있는데 layer가 많아질수록 load 되는 시간이 늘어나 사용자 환경에 따라서 무거워질 것 같아 고민 필요
+5. QGIS 상에서 제공하는 기능이 가능한지 여부는 앞으로 진행하면서 계속적으로 고민 예정
       
 
