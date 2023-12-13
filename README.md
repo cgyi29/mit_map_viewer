@@ -43,6 +43,7 @@ sequenceDiagram
 ## 프로젝트 테스트 코드 구성 
 1. MapDataControllerTest.class - 지도 데이터 추출 api 컨트롤러 테스트
     * givenFileName_whenGetMapDataByShapeFile_thenResponseCheck
+      
       response status이 200인지 정도만 체크중임
 
 ## 프로젝트 1차 회고 (진행 1주차)
