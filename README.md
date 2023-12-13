@@ -27,3 +27,16 @@
 * src.test.java.com.tmap.mit.map_viewer
     * controller (controller test code - BBD 형태)
 
+## Process
+### Map data parsing & Web Service
+```mermaid
+sequenceDiagram
+    actor Server
+    participant ParsingAPI
+    participant MapFile
+    Server->>ParsingAPI: 각 타입(point/polyline/polygon)<br>공간 데이터 요청
+    ParsingAPI->>MapFile: 현재는 .shp 파일만을 read 해 옴
+    Note over ParsingAPI, MapFile: header, record 구간에서 제공 해 주는<br>Byte 정보를 읽어와서 dto 생성  
+    ParsingAPI->>Server: 파싱 된 공간 데이터 기반으로 화면상에 그려줌
+```
+
