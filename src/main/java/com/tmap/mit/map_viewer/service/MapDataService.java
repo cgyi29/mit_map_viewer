@@ -19,9 +19,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -49,9 +48,8 @@ public class MapDataService {
 
             List<Coordinate> coordinates = new ArrayList<>();
             List<BoundingBox> recordBboxs = new ArrayList<>();
-            Map<Integer, List<Coordinate>> coordinatesMap = new HashMap<>();
+            List<Double[]> polyCoordinates = new ArrayList<>();
 
-            int initIdx = 1;
             boolean isPolyType = ShapeType.POLY.contains(shapeType);
             while(channel.read(recordBuffer) != -1){
                 recordBuffer.flip();
@@ -82,18 +80,15 @@ public class MapDataService {
                     //int numParts = contentBuffer.getInt(FileRecordContent.IDX_NUM_PARTS);
                     int numPoints = contentBuffer.getInt(FileRecordContent.IDX_NUM_POINTS);
 
-                    List<Coordinate> coordinateList = new ArrayList<>();
                     for(int i=0; i<numPoints; i++){
-                        double pointX = contentBuffer.getDouble();
-                        double pointY = contentBuffer.getDouble();
-                        coordinateList.add(new Coordinate(pointX, pointY));
+                        double x = contentBuffer.getDouble();
+                        double y = contentBuffer.getDouble();
+                        polyCoordinates.add(new Double[]{x, y});
                     }
-                    coordinatesMap.put(initIdx, coordinateList);
-                    initIdx++;
                 }
                 recordBuffer.clear();
             }
-            return isPolyType ? new ShapeData(shapeType, bbox, recordBboxs, coordinatesMap) : new ShapeData(shapeType, bbox, coordinates);
+            return isPolyType ? new ShapeData(shapeType, bbox, recordBboxs, polyCoordinates) : new ShapeData(shapeType, bbox, coordinates);
         }
     }
 

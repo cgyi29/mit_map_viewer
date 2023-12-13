@@ -2,27 +2,26 @@ package com.tmap.mit.map_viewer.dto;
 
 import lombok.Getter;
 import java.util.List;
-import java.util.Map;
 
 @Getter
 public class ShapeData {
     private int shapeType;
     private BoundingBox bbox;
-    private List<Coordinate> coordinates;
+    private List<Coordinate> pointCoordinates;
 
     private List<BoundingBox> recordBboxs;
-    private Map<Integer, List<Coordinate>> coordinatesMap;
+    private List<Double[]> polyCoordinates;
 
-    public ShapeData(int shapeType, BoundingBox bbox, List<Coordinate> coordinates){
+    public ShapeData(int shapeType, BoundingBox bbox, List<Coordinate> pointCoordinates){
         this.shapeType = shapeType;
         this.bbox = bbox;
-        this.coordinates = coordinates;
+        this.pointCoordinates = pointCoordinates;
     }
 
-    public ShapeData(int shapeType, BoundingBox bbox, List<BoundingBox> recordBboxs, Map<Integer, List<Coordinate>> coordinatesMap){
+    public ShapeData(int shapeType, BoundingBox bbox, List<BoundingBox> recordBboxs, List<Double[]> polyCoordinates){
         this.shapeType = shapeType;
         this.bbox = bbox;
         this.recordBboxs = recordBboxs;
-        this.coordinatesMap = coordinatesMap;
+        this.polyCoordinates = polyCoordinates;
     }
 }

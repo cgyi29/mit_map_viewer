@@ -8,25 +8,43 @@
                 console.log(shapeData);
             }
 
-            async function drawPolygonLine(){
+            async function drawPolyLine(){
                 const response = await fetch('/mapData/Hatlar');
                 const shapeData = await response.json();
-                console.log(shapeData);
+                const bbox = await shapeData.bbox;
+                const coordinates = await [shapeData.polyCoordinates];
+
+                const mapCanvas = document.getElementById('polyLineMapCanvas');
+                const ctx = mapCanvas.getContext('2d');
+
+                if(mapCanvas.getContext){
+                    coordinates.forEach(coordinate => {
+                        ctx.beginPath();
+                        //let  trPoint= transformCoordinates(coordinate[0][0], coordinate[0][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
+                        ctx.moveTo(coordinate[0][0], coordinate[0][1]);
+                        for(let i=1; i<coordinate.length; i++){
+                            //let trNextPoint = transformCoordinates(coordinate[i][0], coordinate[i][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
+                            ctx.lineTo(coordinate[i][0] , coordinate[i][1] );
+                        }
+                        ctx.closePath();
+                        ctx.stroke();
+                    });
+                }
             }
 
             async function drawPoint(){
                 const response = await fetch('/mapData/Duraklar');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
-                const coordinates = await shapeData.coordinates;
+                const coordinates = await shapeData.pointCoordinates;
 
-                const mapCanvas = document.getElementById('mapCanvas');
+                const mapCanvas = document.getElementById('pointMapCanvas');
                 if(mapCanvas.getContext){
                     const ctx = mapCanvas.getContext('2d');
                     coordinates.forEach(coordinate => {
-                        let transformPoint = transformCoordinates(coordinate.x, coordinate.y, bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
+                        let trPoint = transformCoordinates(coordinate.x, coordinate.y, bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
                         ctx.beginPath();
-                        ctx.arc(transformPoint.x, transformPoint.y, 2, 0, 2 * Math.PI);
+                        ctx.arc(trPoint.x, trPoint.y, 2, 0, 2 * Math.PI);
                         ctx.fill();
                     });
                 }
@@ -41,11 +59,12 @@
 
             window.onload = drawPoint();
             window.onload = drawPolygon();
-            window.onload = drawPolygonLine();
+            window.onload = drawPolyLine();
         </script>
     </th:head>
     <th:body>
-        <canvas id="mapCanvas" width="800" height="500" style="border:1px solid"></canvas>
+        <canvas id="pointMapCanvas" width="800" height="500" style="border:1px solid"></canvas>
+        <canvas id="polyLineMapCanvas" width="800" height="500" style="border:1px solid"></canvas>
     </th:body>
 
 </html>
