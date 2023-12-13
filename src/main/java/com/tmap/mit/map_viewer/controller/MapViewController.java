@@ -9,7 +9,6 @@ import reactor.core.publisher.Mono;
  */
 @Controller
 public class MapViewController {
-
     @GetMapping("")
     public Mono<String> getView() {
         return Mono.just("mapViewer");

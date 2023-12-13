@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 /**
  * map data controller
  */
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor

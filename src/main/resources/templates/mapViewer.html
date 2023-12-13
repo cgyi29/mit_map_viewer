@@ -2,18 +2,29 @@
 <html xmlns:th="http://www.w3.org/1999/html" lang="en">
     <th:head>
         <script th:inline="javascript">
+            async function drawPolygon(){
+                const response = await fetch('/mapData/KoyMahalle');
+                const shapeData = await response.json();
+                console.log(shapeData);
+            }
+
+            async function drawPolygonLine(){
+                const response = await fetch('/mapData/Hatlar');
+                const shapeData = await response.json();
+                console.log(shapeData);
+            }
+
             async function drawPoint(){
                 const response = await fetch('/mapData/Duraklar');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
                 const coordinates = await shapeData.coordinates;
 
-                const myCanvas = document.getElementById('mapCanvas');
-                if(myCanvas.getContext){
-                    const ctx = myCanvas.getContext('2d');
-
+                const mapCanvas = document.getElementById('mapCanvas');
+                if(mapCanvas.getContext){
+                    const ctx = mapCanvas.getContext('2d');
                     coordinates.forEach(coordinate => {
-                        let transformPoint = transformCoordinates(coordinate.x, coordinate.y, bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, myCanvas);
+                        let transformPoint = transformCoordinates(coordinate.x, coordinate.y, bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
                         ctx.beginPath();
                         ctx.arc(transformPoint.x, transformPoint.y, 2, 0, 2 * Math.PI);
                         ctx.fill();
@@ -29,11 +40,12 @@
             }
 
             window.onload = drawPoint();
+            window.onload = drawPolygon();
+            window.onload = drawPolygonLine();
         </script>
     </th:head>
     <th:body>
         <canvas id="mapCanvas" width="800" height="500" style="border:1px solid"></canvas>
-
     </th:body>
 
 </html>
