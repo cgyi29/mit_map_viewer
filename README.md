@@ -8,7 +8,6 @@
   * Gradle
   * lombok
   * webflux
-
 * Front-End
   * html
   * java script
