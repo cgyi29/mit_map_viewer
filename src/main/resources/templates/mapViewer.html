@@ -5,7 +5,28 @@
             async function drawPolygon(){
                 const response = await fetch('/mapData/KoyMahalle');
                 const shapeData = await response.json();
-                console.log(shapeData);
+                const bbox = await shapeData.bbox;
+                const recordBbox = await shapeData.recordBboxs;
+                const coordinates = await [shapeData.polyCoordinates];
+
+                const mapCanvas = document.getElementById('polygonMapCanvas');
+                const ctx = mapCanvas.getContext('2d');
+
+                if(mapCanvas.getContext){
+                    coordinates.forEach(coordinate => {
+                        ctx.beginPath();
+                        let  trPoint= transformCoordinates(coordinate[0][0], coordinate[0][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
+                        ctx.moveTo(trPoint.x, trPoint.y);
+                        for(let i=1; i<coordinate.length; i++){
+                            let trNextPoint = transformCoordinates(coordinate[i][0], coordinate[i][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
+                            ctx.lineTo(trNextPoint.x , trNextPoint.y );
+                        }
+                        ctx.closePath();
+                        ctx.lineJoin = 'round';
+                        ctx.lineCap = 'round';
+                        ctx.stroke();
+                    });
+                }
             }
 
             async function drawPolyLine(){
@@ -20,16 +41,25 @@
                 if(mapCanvas.getContext){
                     coordinates.forEach(coordinate => {
                         ctx.beginPath();
-                        //let  trPoint= transformCoordinates(coordinate[0][0], coordinate[0][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
-                        ctx.moveTo(coordinate[0][0], coordinate[0][1]);
+                        let  trPoint= transformCoordinatestest(coordinate[0][0], coordinate[0][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
+                        ctx.moveTo(trPoint.x, trPoint.y);
                         for(let i=1; i<coordinate.length; i++){
-                            //let trNextPoint = transformCoordinates(coordinate[i][0], coordinate[i][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
-                            ctx.lineTo(coordinate[i][0] , coordinate[i][1] );
+                            let trNextPoint = transformCoordinatestest(coordinate[i][0], coordinate[i][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
+                            ctx.lineTo(trNextPoint.x , trNextPoint.y );
                         }
-                        ctx.closePath();
+                        ctx.lineJoin = 'round';
+                        ctx.lineCap = 'round';
+                        //ctx.closePath();
                         ctx.stroke();
                     });
                 }
+            }
+
+            function transformCoordinatestest(x, y, minX, minY, maxX, maxY, canvas){
+                let transformX = (canvas.width / (maxX - minX)) * (x - minX) ;
+                let transformY = canvas.height -  ((y - minY) * (canvas.height / (maxY - minY))) ;
+
+                return {x : transformX, y: transformY};
             }
 
             async function drawPoint(){
@@ -51,8 +81,8 @@
             }
 
             function transformCoordinates(x, y, minX, minY, maxX, maxY, canvas){
-                let transformX = (x - minX) / (maxX - minX) * canvas.width;
-                let transformY = (y - minY) / (maxY - minY) * canvas.height;
+                let transformX = ((maxX - x) / (maxX - minX)) * canvas.width;
+                let transformY = ((maxY - y) / (maxY - minY)) * canvas.height;
 
                 return {x : transformX, y: transformY};
             }
@@ -65,6 +95,7 @@
     <th:body>
         <canvas id="pointMapCanvas" width="800" height="500" style="border:1px solid"></canvas>
         <canvas id="polyLineMapCanvas" width="800" height="500" style="border:1px solid"></canvas>
+        <canvas id="polygonMapCanvas" width="800" height="500" style="border:1px solid"></canvas>
     </th:body>
 
 </html>

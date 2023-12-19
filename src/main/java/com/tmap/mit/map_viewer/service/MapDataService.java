@@ -32,8 +32,7 @@ public class MapDataService {
             ByteBuffer headerBuffer = ByteBuffer.allocate(FileHeader.SIZE);
             channel.read(headerBuffer);
             headerBuffer.flip();
-            //int fileCode = headerBuffer.getInt();
-            //int fileLength = headerBuffer.getInt(FileHeader.LENGTH);
+
             headerBuffer.order(ByteOrder.LITTLE_ENDIAN);
             int shapeType = headerBuffer.getInt(FileHeader.IDX_SHAPE_TYPE);
 
@@ -54,7 +53,6 @@ public class MapDataService {
             while(channel.read(recordBuffer) != -1){
                 recordBuffer.flip();
                 if(recordBuffer.remaining() < FileRecordHeader.SIZE)  break;
-                //int recordNumber = recordBuffer.getInt();
                 int contentLength = recordBuffer.getInt(FileRecordHeader.LENGTH) * 2;
 
                 ByteBuffer contentBuffer = ByteBuffer.allocate(contentLength);
@@ -63,7 +61,6 @@ public class MapDataService {
                 channel.read(contentBuffer);
                 contentBuffer.flip();
 
-                //int recordShapeType = contentBuffer.getInt(FileRecordContent.IDX_SHAPE_TYPE);
                 if(ShapeType.POINT.getCode().equals(shapeType)) {
                     coordinates.add(new Coordinate(
                             contentBuffer.getDouble(FileRecordContent.IDX_POINT_TYPE_X),
@@ -77,14 +74,15 @@ public class MapDataService {
                             contentBuffer.getDouble(FileRecordContent.IDX_POLYGON_MAX_X),
                             contentBuffer.getDouble(FileRecordContent.IDX_POLYGON_MAX_Y)));
 
-                    //int numParts = contentBuffer.getInt(FileRecordContent.IDX_NUM_PARTS);
                     int numPoints = contentBuffer.getInt(FileRecordContent.IDX_NUM_POINTS);
 
+                    List<Double[]> temp = new ArrayList<>();
                     for(int i=0; i<numPoints; i++){
-                        double x = contentBuffer.getDouble();
-                        double y = contentBuffer.getDouble();
-                        polyCoordinates.add(new Double[]{x, y});
+                        double x = contentBuffer.getDouble(48);
+                        double y = contentBuffer.getDouble(56);
+                        temp.add(new Double[]{x, y});
                     }
+                    polyCoordinates.addAll(temp);
                 }
                 recordBuffer.clear();
             }
