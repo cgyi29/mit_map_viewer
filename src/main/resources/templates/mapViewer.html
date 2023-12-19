@@ -41,25 +41,18 @@
                 if(mapCanvas.getContext){
                     coordinates.forEach(coordinate => {
                         ctx.beginPath();
-                        let  trPoint= transformCoordinatestest(coordinate[0][0], coordinate[0][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
+                        let  trPoint= transformCoordinates(coordinate[0][0], coordinate[0][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
                         ctx.moveTo(trPoint.x, trPoint.y);
                         for(let i=1; i<coordinate.length; i++){
-                            let trNextPoint = transformCoordinatestest(coordinate[i][0], coordinate[i][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
+                            let trNextPoint = transformCoordinates(coordinate[i][0], coordinate[i][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
                             ctx.lineTo(trNextPoint.x , trNextPoint.y );
                         }
                         ctx.lineJoin = 'round';
                         ctx.lineCap = 'round';
-                        //ctx.closePath();
+                        ctx.closePath();
                         ctx.stroke();
                     });
                 }
-            }
-
-            function transformCoordinatestest(x, y, minX, minY, maxX, maxY, canvas){
-                let transformX = (canvas.width / (maxX - minX)) * (x - minX) ;
-                let transformY = canvas.height -  ((y - minY) * (canvas.height / (maxY - minY))) ;
-
-                return {x : transformX, y: transformY};
             }
 
             async function drawPoint(){

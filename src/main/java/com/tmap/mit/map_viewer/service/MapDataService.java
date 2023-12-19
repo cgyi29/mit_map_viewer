@@ -20,6 +20,9 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -69,25 +72,40 @@ public class MapDataService {
 
                 if(isPolyType) {
                     recordBboxs.add(new BoundingBox(
-                            contentBuffer.getDouble(FileRecordContent.IDX_POLYGON_MIN_X),
-                            contentBuffer.getDouble(FileRecordContent.IDX_POLYGON_MIN_Y),
-                            contentBuffer.getDouble(FileRecordContent.IDX_POLYGON_MAX_X),
-                            contentBuffer.getDouble(FileRecordContent.IDX_POLYGON_MAX_Y)));
+                            contentBuffer.getDouble(FileRecordContent.IDX_POLY_MIN_X),
+                            contentBuffer.getDouble(FileRecordContent.IDX_POLY_MIN_Y),
+                            contentBuffer.getDouble(FileRecordContent.IDX_POLY_MAX_X),
+                            contentBuffer.getDouble(FileRecordContent.IDX_POLY_MAX_Y)));
 
+                    int numParts = contentBuffer.getInt(FileRecordContent.IDX_NUM_PARTS);
                     int numPoints = contentBuffer.getInt(FileRecordContent.IDX_NUM_POINTS);
 
-                    List<Double[]> temp = new ArrayList<>();
-                    for(int i=0; i<numPoints; i++){
-                        double x = contentBuffer.getDouble(48);
-                        double y = contentBuffer.getDouble(56);
-                        temp.add(new Double[]{x, y});
+                    int[] partsStartIndex = new int[numParts];
+                    for(int i=0; i<numParts; i++){
+                        partsStartIndex[i] = contentBuffer.getInt();
                     }
-                    polyCoordinates.addAll(temp);
+
+                    List<Double[]> points = new ArrayList<>();
+                    for(int i=0; i<numPoints; i++){
+                        double x = contentBuffer.getDouble(FileRecordContent.IDX_POLY_X);
+                        double y = contentBuffer.getDouble(FileRecordContent.IDX_POLY_Y);
+                        points.add(new Double[]{x, y});
+                    }
+
+                    for(int partIndex=0; partIndex<numParts; partIndex++){
+                        int start = partsStartIndex[partIndex];
+                        int end = (partIndex < numParts -1) ? partsStartIndex[partIndex + 1] : numPoints;
+                        for(int i = start; i<end; i++){
+                            polyCoordinates.add(points.get(i));
+                        }
+                    }
                 }
                 recordBuffer.clear();
             }
             return isPolyType ? new ShapeData(shapeType, bbox, recordBboxs, polyCoordinates) : new ShapeData(shapeType, bbox, coordinates);
         }
+
+
     }
 
 }
