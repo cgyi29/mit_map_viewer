@@ -12,7 +12,13 @@
 
                 if(mapCanvas.getContext){
                     polygonDatas.forEach(function(polygonData){
-                        drawLine(polygonData.parts, polygonData.points, bbox, mapCanvas, ctx);
+                        polygonData.parts.forEach(function() {
+                            ctx.beginPath();
+                            drawLine(polygonData.points, bbox, mapCanvas, ctx);
+                            ctx.fillStyle = "yellow";
+                            ctx.fill();
+                            ctx.stroke();
+                        });
                     });
                 }
             }
@@ -27,7 +33,11 @@
 
                 if(mapCanvas.getContext){
                     polyLineDatas.forEach(function(polylineData){
-                        drawLine(polylineData.parts, polylineData.points, bbox, mapCanvas, ctx);
+                        polylineData.parts.forEach(function() {
+                            ctx.beginPath();
+                            drawLine(polylineData.points, bbox, mapCanvas, ctx);
+                            ctx.stroke();
+                        });
                     });
                 }
             }
@@ -53,21 +63,18 @@
             function scalePoint(x, y, bbox, canvas){
                 let transformX = ((bbox.maxX - x) / (bbox.maxX - bbox.minX)) * canvas.width;
                 let transformY = ((bbox.maxY - y) / (bbox.maxY - bbox.minY)) * canvas.height;
+                transformX = canvas.width - transformX;
                 return {x : transformX, y: transformY};
             }
 
-            function drawLine(parts, points, bbox, canvas, ctx){
-                parts.forEach(function() {
-                    ctx.beginPath();
-                    points.forEach((start, index) => {
-                        let point = scalePoint(points[index].x, points[index].y, bbox, canvas);
-                        if (index === 0) {
-                            ctx.moveTo(point.x, point.y);
-                        } else {
-                            ctx.lineTo(point.x, point.y);
-                        }
-                    });
-                    ctx.stroke();
+            function drawLine(points, bbox, canvas, ctx){
+                points.forEach((start, index) => {
+                    let point = scalePoint(points[index].x, points[index].y, bbox, canvas);
+                    if (index === 0) {
+                        ctx.moveTo(point.x, point.y);
+                    } else {
+                        ctx.lineTo(point.x, point.y);
+                    }
                 });
             }
 
