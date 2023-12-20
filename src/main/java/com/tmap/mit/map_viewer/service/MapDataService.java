@@ -6,7 +6,8 @@ import com.tmap.mit.map_viewer.constant.FileHeader;
 import com.tmap.mit.map_viewer.constant.FileRecordContent;
 import com.tmap.mit.map_viewer.constant.FileRecordHeader;
 import com.tmap.mit.map_viewer.dto.BoundingBox;
-import com.tmap.mit.map_viewer.dto.Coordinate;
+import com.tmap.mit.map_viewer.dto.Point;
+import com.tmap.mit.map_viewer.dto.PolyTypeData;
 import com.tmap.mit.map_viewer.dto.ShapeData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +21,6 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -48,9 +46,9 @@ public class MapDataService {
             ByteBuffer recordBuffer = ByteBuffer.allocate(FileRecordHeader.SIZE);
             recordBuffer.order(ByteOrder.BIG_ENDIAN);
 
-            List<Coordinate> coordinates = new ArrayList<>();
+            List<Point> points = new ArrayList<>();
             List<BoundingBox> recordBboxs = new ArrayList<>();
-            List<Double[]> polyCoordinates = new ArrayList<>();
+            List<PolyTypeData> polyTypeDatas = new ArrayList<>();
 
             boolean isPolyType = ShapeType.POLY.contains(shapeType);
             while(channel.read(recordBuffer) != -1){
@@ -65,7 +63,7 @@ public class MapDataService {
                 contentBuffer.flip();
 
                 if(ShapeType.POINT.getCode().equals(shapeType)) {
-                    coordinates.add(new Coordinate(
+                    points.add(new Point(
                             contentBuffer.getDouble(FileRecordContent.IDX_POINT_TYPE_X),
                             contentBuffer.getDouble(FileRecordContent.IDX_POINT_TYPE_Y)));
                 }
@@ -80,29 +78,28 @@ public class MapDataService {
                     int numParts = contentBuffer.getInt(FileRecordContent.IDX_NUM_PARTS);
                     int numPoints = contentBuffer.getInt(FileRecordContent.IDX_NUM_POINTS);
 
-                    int[] partsStartIndex = new int[numParts];
-                    for(int i=0; i<numParts; i++){
-                        partsStartIndex[i] = contentBuffer.getInt();
+                    int[] parts = new int[numParts];
+                    int idxPartsStart = FileRecordContent.IDX_PARTS;
+                    for (int i=0; i<numParts; i++) {
+                        parts[i] = contentBuffer.getInt(idxPartsStart);
+                        idxPartsStart += Integer.BYTES;
                     }
 
-                    List<Double[]> points = new ArrayList<>();
+                    List<Point> polyPoints = new ArrayList<>();
+                    int idxPolyX = FileRecordContent.IDX_POLY_X;
+                    int idxPolyY = FileRecordContent.IDX_POLY_Y;
                     for(int i=0; i<numPoints; i++){
-                        double x = contentBuffer.getDouble(FileRecordContent.IDX_POLY_X);
-                        double y = contentBuffer.getDouble(FileRecordContent.IDX_POLY_Y);
-                        points.add(new Double[]{x, y});
+                        double x = contentBuffer.getDouble(idxPolyX);
+                        double y = contentBuffer.getDouble(idxPolyY);
+                        idxPolyX += Double.BYTES * 2;
+                        idxPolyY += Double.BYTES * 2;
+                        polyPoints.add(new Point(x, y));
                     }
-
-                    for(int partIndex=0; partIndex<numParts; partIndex++){
-                        int start = partsStartIndex[partIndex];
-                        int end = (partIndex < numParts -1) ? partsStartIndex[partIndex + 1] : numPoints;
-                        for(int i = start; i<end; i++){
-                            polyCoordinates.add(points.get(i));
-                        }
-                    }
+                    polyTypeDatas.add(new PolyTypeData(polyPoints, parts));
                 }
                 recordBuffer.clear();
             }
-            return isPolyType ? new ShapeData(shapeType, bbox, recordBboxs, polyCoordinates) : new ShapeData(shapeType, bbox, coordinates);
+            return isPolyType ? new ShapeData(shapeType, bbox, polyTypeDatas, recordBboxs) : new ShapeData(shapeType, bbox, points);
         }
 
 

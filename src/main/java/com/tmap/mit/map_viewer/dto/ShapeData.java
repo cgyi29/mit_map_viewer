@@ -7,21 +7,21 @@ import java.util.List;
 public class ShapeData {
     private int shapeType;
     private BoundingBox bbox;
-    private List<Coordinate> pointCoordinates;
-
+    private List<Point> points;
+    private List<PolyTypeData> polyTypeDatas;
     private List<BoundingBox> recordBboxs;
-    private List<Double[]> polyCoordinates;
 
-    public ShapeData(int shapeType, BoundingBox bbox, List<Coordinate> pointCoordinates){
+
+    public ShapeData(int shapeType, BoundingBox bbox, List<Point> points){
         this.shapeType = shapeType;
         this.bbox = bbox;
-        this.pointCoordinates = pointCoordinates;
+        this.points = points;
     }
 
-    public ShapeData(int shapeType, BoundingBox bbox, List<BoundingBox> recordBboxs, List<Double[]> polyCoordinates){
+    public ShapeData(int shapeType, BoundingBox bbox, List<PolyTypeData> polyTypeDatas, List<BoundingBox> recordBboxs){
         this.shapeType = shapeType;
         this.bbox = bbox;
+        this.polyTypeDatas = polyTypeDatas;
         this.recordBboxs = recordBboxs;
-        this.polyCoordinates = polyCoordinates;
     }
 }

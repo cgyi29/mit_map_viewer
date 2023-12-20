@@ -6,25 +6,13 @@
                 const response = await fetch('/mapData/KoyMahalle');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
-                const recordBbox = await shapeData.recordBboxs;
-                const coordinates = await [shapeData.polyCoordinates];
-
-                const mapCanvas = document.getElementById('polygonMapCanvas');
-                const ctx = mapCanvas.getContext('2d');
+                const polyDatas = await shapeData.polyTypeDatas;
+                const mapCanvas = await document.getElementById('polygonMapCanvas');
+                const ctx = await mapCanvas.getContext('2d');
 
                 if(mapCanvas.getContext){
-                    coordinates.forEach(coordinate => {
-                        ctx.beginPath();
-                        let  trPoint= transformCoordinates(coordinate[0][0], coordinate[0][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
-                        ctx.moveTo(trPoint.x, trPoint.y);
-                        for(let i=1; i<coordinate.length; i++){
-                            let trNextPoint = transformCoordinates(coordinate[i][0], coordinate[i][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
-                            ctx.lineTo(trNextPoint.x , trNextPoint.y );
-                        }
-                        ctx.closePath();
-                        ctx.lineJoin = 'round';
-                        ctx.lineCap = 'round';
-                        ctx.stroke();
+                    polyDatas.forEach(function(polyData){
+                        drawLine(polyData.parts, polyData.points, bbox, mapCanvas, ctx);
                     });
                 }
             }
@@ -33,24 +21,13 @@
                 const response = await fetch('/mapData/Hatlar');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
-                const coordinates = await [shapeData.polyCoordinates];
-
-                const mapCanvas = document.getElementById('polyLineMapCanvas');
-                const ctx = mapCanvas.getContext('2d');
+                const polyDatas = await shapeData.polyTypeDatas;
+                const mapCanvas = await document.getElementById('polyLineMapCanvas');
+                const ctx = await mapCanvas.getContext('2d');
 
                 if(mapCanvas.getContext){
-                    coordinates.forEach(coordinate => {
-                        ctx.beginPath();
-                        let  trPoint= transformCoordinates(coordinate[0][0], coordinate[0][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
-                        ctx.moveTo(trPoint.x, trPoint.y);
-                        for(let i=1; i<coordinate.length; i++){
-                            let trNextPoint = transformCoordinates(coordinate[i][0], coordinate[i][1], bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
-                            ctx.lineTo(trNextPoint.x , trNextPoint.y );
-                        }
-                        ctx.lineJoin = 'round';
-                        ctx.lineCap = 'round';
-                        ctx.closePath();
-                        ctx.stroke();
+                    polyDatas.forEach(function(polyData){
+                        drawLine(polyData.parts, polyData.points, bbox, mapCanvas, ctx);
                     });
                 }
             }
@@ -59,13 +36,13 @@
                 const response = await fetch('/mapData/Duraklar');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
-                const coordinates = await shapeData.pointCoordinates;
+                const points = await shapeData.points;
 
                 const mapCanvas = document.getElementById('pointMapCanvas');
                 if(mapCanvas.getContext){
                     const ctx = mapCanvas.getContext('2d');
-                    coordinates.forEach(coordinate => {
-                        let trPoint = transformCoordinates(coordinate.x, coordinate.y, bbox.minX, bbox.minY, bbox.maxX, bbox.maxY, mapCanvas);
+                    points.forEach(point => {
+                        let trPoint = scalePoint(point.x, point.y, bbox, mapCanvas);
                         ctx.beginPath();
                         ctx.arc(trPoint.x, trPoint.y, 2, 0, 2 * Math.PI);
                         ctx.fill();
@@ -73,15 +50,29 @@
                 }
             }
 
-            function transformCoordinates(x, y, minX, minY, maxX, maxY, canvas){
-                let transformX = ((maxX - x) / (maxX - minX)) * canvas.width;
-                let transformY = ((maxY - y) / (maxY - minY)) * canvas.height;
-
+            function scalePoint(x, y, bbox, canvas){
+                let transformX = ((bbox.maxX - x) / (bbox.maxX - bbox.minX)) * canvas.width;
+                let transformY = ((bbox.maxY - y) / (bbox.maxY - bbox.minY)) * canvas.height;
                 return {x : transformX, y: transformY};
             }
 
-            window.onload = drawPoint();
-            window.onload = drawPolygon();
+            function drawLine(parts, points, bbox, canvas, ctx){
+                parts.forEach(function() {
+                    ctx.beginPath();
+                    points.forEach((start, index) => {
+                        let point = scalePoint(points[index].x, points[index].y, bbox, canvas);
+                        if (index === 0) {
+                            ctx.moveTo(point.x, point.y);
+                        } else {
+                            ctx.lineTo(point.x, point.y);
+                        }
+                    });
+                    ctx.stroke();
+                });
+            }
+
+            //window.onload = drawPoint();
+            //window.onload = drawPolygon();
             window.onload = drawPolyLine();
         </script>
     </th:head>

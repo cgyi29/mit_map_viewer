@@ -9,6 +9,7 @@ public class FileRecordContent {
     public static final int IDX_POLY_MAX_Y = 28;
     public static final int IDX_NUM_PARTS = 36;
     public static final int IDX_NUM_POINTS = 40;
+    public static final int IDX_PARTS = 44;
     public static final int IDX_POLY_X = 48;
     public static final int IDX_POLY_Y = 56;
 }
