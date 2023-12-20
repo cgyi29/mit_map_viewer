@@ -6,13 +6,13 @@
                 const response = await fetch('/mapData/KoyMahalle');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
-                const polyDatas = await shapeData.polyTypeDatas;
+                const polygonDatas = await shapeData.polyTypeDatas;
                 const mapCanvas = await document.getElementById('polygonMapCanvas');
                 const ctx = await mapCanvas.getContext('2d');
 
                 if(mapCanvas.getContext){
-                    polyDatas.forEach(function(polyData){
-                        drawLine(polyData.parts, polyData.points, bbox, mapCanvas, ctx);
+                    polygonDatas.forEach(function(polygonData){
+                        drawLine(polygonData.parts, polygonData.points, bbox, mapCanvas, ctx);
                     });
                 }
             }
@@ -21,13 +21,13 @@
                 const response = await fetch('/mapData/Hatlar');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
-                const polyDatas = await shapeData.polyTypeDatas;
+                const polyLineDatas = await shapeData.polyTypeDatas;
                 const mapCanvas = await document.getElementById('polyLineMapCanvas');
                 const ctx = await mapCanvas.getContext('2d');
 
                 if(mapCanvas.getContext){
-                    polyDatas.forEach(function(polyData){
-                        drawLine(polyData.parts, polyData.points, bbox, mapCanvas, ctx);
+                    polyLineDatas.forEach(function(polylineData){
+                        drawLine(polylineData.parts, polylineData.points, bbox, mapCanvas, ctx);
                     });
                 }
             }

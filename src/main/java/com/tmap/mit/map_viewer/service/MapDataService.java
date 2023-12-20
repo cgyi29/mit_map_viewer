@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,39 +28,33 @@ import java.util.List;
 public class MapDataService {
     public ShapeData getMapDataByShapeFile(String fileName) throws IOException {
         ClassPathResource resource = new ClassPathResource(String.format(FileConstant.SHP_FILE_PATH_FORMAT, fileName));
-        try (FileInputStream fis = new FileInputStream(resource.getFile());
-             FileChannel channel = fis.getChannel()) {
-            ByteBuffer headerBuffer = ByteBuffer.allocate(FileHeader.SIZE);
-            channel.read(headerBuffer);
-            headerBuffer.flip();
-
+        try (FileChannel channel = new FileInputStream(resource.getFile()).getChannel()) {
+            MappedByteBuffer headerBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, FileHeader.SIZE);
             headerBuffer.order(ByteOrder.LITTLE_ENDIAN);
-            int shapeType = headerBuffer.getInt(FileHeader.IDX_SHAPE_TYPE);
 
+            int shapeType = headerBuffer.getInt(FileHeader.IDX_SHAPE_TYPE);
             BoundingBox bbox = new BoundingBox(
                     headerBuffer.getDouble(FileHeader.IDX_MIN_X),
                     headerBuffer.getDouble(FileHeader.IDX_MIN_Y),
                     headerBuffer.getDouble(FileHeader.IDX_MAX_X),
                     headerBuffer.getDouble(FileHeader.IDX_MAX_Y));
 
-            ByteBuffer recordBuffer = ByteBuffer.allocate(FileRecordHeader.SIZE);
-            recordBuffer.order(ByteOrder.BIG_ENDIAN);
-
             List<Point> points = new ArrayList<>();
             List<BoundingBox> recordBboxs = new ArrayList<>();
             List<PolyTypeData> polyTypeDatas = new ArrayList<>();
 
             boolean isPolyType = ShapeType.POLY.contains(shapeType);
-            while(channel.read(recordBuffer) != -1){
-                recordBuffer.flip();
+            long position = FileHeader.SIZE;
+
+            while(position < channel.size()){
+                MappedByteBuffer recordBuffer = channel.map(FileChannel.MapMode.READ_ONLY, position, FileRecordHeader.SIZE);
+                recordBuffer.order(ByteOrder.BIG_ENDIAN);
+
                 if(recordBuffer.remaining() < FileRecordHeader.SIZE)  break;
                 int contentLength = recordBuffer.getInt(FileRecordHeader.LENGTH) * 2;
 
-                ByteBuffer contentBuffer = ByteBuffer.allocate(contentLength);
+                MappedByteBuffer contentBuffer = channel.map(FileChannel.MapMode.READ_ONLY, position + FileRecordHeader.SIZE, contentLength);
                 contentBuffer.order(ByteOrder.LITTLE_ENDIAN);
-
-                channel.read(contentBuffer);
-                contentBuffer.flip();
 
                 if(ShapeType.POINT.getCode().equals(shapeType)) {
                     points.add(new Point(
@@ -97,12 +91,9 @@ public class MapDataService {
                     }
                     polyTypeDatas.add(new PolyTypeData(polyPoints, parts));
                 }
-                recordBuffer.clear();
+                position += FileRecordHeader.SIZE + contentLength;
             }
             return isPolyType ? new ShapeData(shapeType, bbox, polyTypeDatas, recordBboxs) : new ShapeData(shapeType, bbox, points);
         }
-
-
     }
-
 }
