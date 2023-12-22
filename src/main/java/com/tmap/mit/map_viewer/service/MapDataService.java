@@ -11,6 +11,7 @@ import com.tmap.mit.map_viewer.dto.PolyTypeData;
 import com.tmap.mit.map_viewer.dto.ShapeData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MapDataService {
+
+    @Cacheable(cacheNames = "getMapDataByShapeFile", key = "'getMapDataByShapeFile:'+#fileName")
     public ShapeData getMapDataByShapeFile(String fileName) throws IOException {
+        log.info("cache가 되는지 확인");
         ClassPathResource resource = new ClassPathResource(String.format(FileConstant.SHP_FILE_PATH_FORMAT, fileName));
         try (FileChannel channel = new FileInputStream(resource.getFile()).getChannel()) {
             MappedByteBuffer headerBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, FileHeader.SIZE);
