@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 @Getter
 public enum CaffeineCacheType {
-    MAP_DATA("getMapDataByShapeFile", 60, 5, TimeUnit.MINUTES);
+    MAP_DATA("getMapDataByShapeFile", 5, 5, TimeUnit.SECONDS);
 
     CaffeineCacheType(String cacheName, int expiredAfterWrite, int maximumSize, TimeUnit timeUtint) {
         this.cacheName = cacheName;
