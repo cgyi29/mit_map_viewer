@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+
 /**
  * map data controller
  */
@@ -21,7 +23,7 @@ public class MapDataController {
     private final MapDataService mapDataService;
 
     @GetMapping("/{fileName}")
-    public Mono<ShapeData> getMapDataByShapeFile(@PathVariable String fileName) {
-        return Mono.fromCallable(() -> mapDataService.getMapDataByShapeFile(fileName));
+    public ShapeData getMapDataByShapeFile(@PathVariable String fileName) throws IOException {
+        return  mapDataService.getMapDataByShapeFileWithCache(fileName);
     }
 }

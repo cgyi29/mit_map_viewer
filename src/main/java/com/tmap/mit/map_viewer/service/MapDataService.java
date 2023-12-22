@@ -27,10 +27,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MapDataService {
-
     @Cacheable(cacheNames = "getMapDataByShapeFile", key = "'getMapDataByShapeFile:'+#fileName")
+    public ShapeData getMapDataByShapeFileWithCache(String fileName) throws IOException {
+        return this.getMapDataByShapeFile(fileName);
+    }
+
     public ShapeData getMapDataByShapeFile(String fileName) throws IOException {
-        log.info("cache가 되는지 확인");
         ClassPathResource resource = new ClassPathResource(String.format(FileConstant.SHP_FILE_PATH_FORMAT, fileName));
         try (FileChannel channel = new FileInputStream(resource.getFile()).getChannel()) {
             MappedByteBuffer headerBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, FileHeader.SIZE);
@@ -50,23 +52,23 @@ public class MapDataService {
             boolean isPolyType = ShapeType.POLY.contains(shapeType);
             long position = FileHeader.SIZE;
 
-            while(position < channel.size()){
+            while (position < channel.size()) {
                 MappedByteBuffer recordBuffer = channel.map(FileChannel.MapMode.READ_ONLY, position, FileRecordHeader.SIZE);
                 recordBuffer.order(ByteOrder.BIG_ENDIAN);
 
-                if(recordBuffer.remaining() < FileRecordHeader.SIZE)  break;
+                if (recordBuffer.remaining() < FileRecordHeader.SIZE) break;
                 int contentLength = recordBuffer.getInt(FileRecordHeader.LENGTH) * 2;
 
                 MappedByteBuffer contentBuffer = channel.map(FileChannel.MapMode.READ_ONLY, position + FileRecordHeader.SIZE, contentLength);
                 contentBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
-                if(ShapeType.POINT.getCode().equals(shapeType)) {
+                if (ShapeType.POINT.getCode().equals(shapeType)) {
                     points.add(new Point(
                             contentBuffer.getDouble(FileRecordContent.IDX_POINT_TYPE_X),
                             contentBuffer.getDouble(FileRecordContent.IDX_POINT_TYPE_Y)));
                 }
 
-                if(isPolyType) {
+                if (isPolyType) {
                     recordBboxs.add(new BoundingBox(
                             contentBuffer.getDouble(FileRecordContent.IDX_POLY_MIN_X),
                             contentBuffer.getDouble(FileRecordContent.IDX_POLY_MIN_Y),
@@ -78,7 +80,7 @@ public class MapDataService {
 
                     int[] parts = new int[numParts];
                     int idxPartsStart = FileRecordContent.IDX_PARTS;
-                    for (int i=0; i<numParts; i++) {
+                    for (int i = 0; i < numParts; i++) {
                         parts[i] = contentBuffer.getInt(idxPartsStart);
                         idxPartsStart += Integer.BYTES;
                     }
@@ -86,7 +88,7 @@ public class MapDataService {
                     List<Point> polyPoints = new ArrayList<>();
                     int idxPolyX = FileRecordContent.IDX_POLY_X;
                     int idxPolyY = FileRecordContent.IDX_POLY_Y;
-                    for(int i=0; i<numPoints; i++){
+                    for (int i = 0; i < numPoints; i++) {
                         double x = contentBuffer.getDouble(idxPolyX);
                         double y = contentBuffer.getDouble(idxPolyY);
                         idxPolyX += Double.BYTES * 2;
@@ -97,6 +99,7 @@ public class MapDataService {
                 }
                 position += FileRecordHeader.SIZE + contentLength;
             }
+
             return isPolyType ? new ShapeData(shapeType, bbox, polyTypeDatas, recordBboxs) : new ShapeData(shapeType, bbox, points);
         }
     }

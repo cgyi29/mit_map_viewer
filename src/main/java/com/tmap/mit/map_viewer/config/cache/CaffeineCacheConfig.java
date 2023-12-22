@@ -1,15 +1,18 @@
 package com.tmap.mit.map_viewer.config.cache;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.tmap.mit.map_viewer.cd.CaffeineCacheType;
+import com.tmap.mit.map_viewer.cd.TargetFile;
+import com.tmap.mit.map_viewer.service.MapDataService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.caffeine.CaffeineCache;
-import org.springframework.cache.support.SimpleCacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Arrays;
-import java.util.List;
+import java.io.IOException;
 
 /**
  * caffein cache 적용
@@ -17,23 +20,29 @@ import java.util.List;
  */
 
 @Configuration
+@RequiredArgsConstructor
 public class CaffeineCacheConfig {
+    private final MapDataService mapDataService;
+
     @Bean
     public CacheManager caffeineConfig() {
-        List<CaffeineCache> caches = Arrays.stream(CaffeineCacheType.values())
-                .map(cache -> new CaffeineCache(
-                        cache.getCacheName(),
-                        Caffeine.newBuilder()
-                                .expireAfterWrite(cache.getExpiredAfterWrite(), cache.getTimeUtint())
-                                .refreshAfterWrite(cache.getExpiredAfterWrite(), cache.getTimeUtint())
-                                .maximumSize(cache.getMaximumSize())
-                                .recordStats()
-                                .build()
-                )).toList();
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
 
-        SimpleCacheManager cacheManager = new SimpleCacheManager();
-        cacheManager.setCaches(caches);
+        for(CaffeineCacheType cacheType : CaffeineCacheType.values()){
+            for(TargetFile targetFile : TargetFile.values()) {
+                LoadingCache<Object, Object> loadingCache = Caffeine.newBuilder()
+                        .expireAfterWrite(cacheType.getExpiredAfterWrite(), cacheType.getTimeUtint())
+                        .refreshAfterWrite(cacheType.getRefreshAfterWrite(), cacheType.getTimeUtint())
+                        .maximumSize(cacheType.getMaximumSize())
+                        .build(key -> loadDataFromSource(targetFile.name()));
+
+                cacheManager.registerCustomCache(String.format(cacheType.getKeyFormat(), cacheType.getKey(), targetFile.name()), loadingCache);
+            }
+        }
 
         return cacheManager;
+    }
+    private Object loadDataFromSource(String param) throws IOException {
+        return mapDataService.getMapDataByShapeFile(param);
     }
 }
