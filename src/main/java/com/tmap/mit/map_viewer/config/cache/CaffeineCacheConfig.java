@@ -6,7 +6,6 @@ import com.tmap.mit.map_viewer.cd.CaffeineCacheType;
 import com.tmap.mit.map_viewer.cd.TargetFile;
 import com.tmap.mit.map_viewer.service.MapDataService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
@@ -31,10 +30,9 @@ public class CaffeineCacheConfig {
         for(CaffeineCacheType cacheType : CaffeineCacheType.values()){
             for(TargetFile targetFile : TargetFile.values()) {
                 LoadingCache<Object, Object> loadingCache = Caffeine.newBuilder()
-                        .expireAfterWrite(cacheType.getExpiredAfterWrite(), cacheType.getTimeUtint())
                         .refreshAfterWrite(cacheType.getRefreshAfterWrite(), cacheType.getTimeUtint())
                         .maximumSize(cacheType.getMaximumSize())
-                        .build(key -> loadDataFromSource(targetFile.name()));
+                        .build(key -> loadDataFromService(targetFile.name()));
 
                 cacheManager.registerCustomCache(String.format(cacheType.getKeyFormat(), cacheType.getKey(), targetFile.name()), loadingCache);
             }
@@ -42,7 +40,7 @@ public class CaffeineCacheConfig {
 
         return cacheManager;
     }
-    private Object loadDataFromSource(String param) throws IOException {
+    private Object loadDataFromService(String param) throws IOException {
         return mapDataService.getMapDataByShapeFile(param);
     }
 }
