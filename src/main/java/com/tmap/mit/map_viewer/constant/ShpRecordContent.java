@@ -1,5 +1,5 @@
 package com.tmap.mit.map_viewer.constant;
-public class FileRecordContent {
+public class ShpRecordContent {
     public static final int IDX_SHAPE_TYPE = 0;
     public static final int IDX_POINT_TYPE_X = 4;
     public static final int IDX_POINT_TYPE_Y = 12;

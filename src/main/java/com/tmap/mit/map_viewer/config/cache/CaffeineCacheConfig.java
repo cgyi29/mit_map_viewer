@@ -30,14 +30,13 @@ public class CaffeineCacheConfig {
         for(CaffeineCacheType cacheType : CaffeineCacheType.values()){
             for(TargetFile targetFile : TargetFile.values()) {
                 LoadingCache<Object, Object> loadingCache = Caffeine.newBuilder()
-                        .refreshAfterWrite(cacheType.getRefreshAfterWrite(), cacheType.getTimeUtint())
+                        .expireAfterWrite(cacheType.getRefreshAfterWrite(), cacheType.getTimeUtint())
                         .maximumSize(cacheType.getMaximumSize())
                         .build(key -> loadDataFromService(targetFile.name()));
 
                 cacheManager.registerCustomCache(String.format(cacheType.getKeyFormat(), cacheType.getKey(), targetFile.name()), loadingCache);
             }
         }
-
         return cacheManager;
     }
     private Object loadDataFromService(String param) throws IOException {

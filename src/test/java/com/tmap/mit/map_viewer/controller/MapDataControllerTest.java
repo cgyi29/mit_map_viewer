@@ -1,7 +1,7 @@
 package com.tmap.mit.map_viewer.controller;
 
-import com.tmap.mit.map_viewer.dto.ShapeData;
-import com.tmap.mit.map_viewer.service.MapDataService;
+import com.tmap.mit.map_viewer.dto.ShpData;
+import com.tmap.mit.map_viewer.service.MapSHPDataService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ class MapDataControllerTest {
     private WebTestClient webTestClient;
 
     @MockBean
-    private MapDataService mapDataService;
+    private MapSHPDataService mapSHPDataService;
 
     private final String GET_MAP_DATA_URI_FORMMAT = "/mapData/%s";
     private final String POINT_FILE_NAME = "Duraklar";
@@ -33,11 +33,23 @@ class MapDataControllerTest {
         String fileName = POINT_FILE_NAME;
 
         // when & then
-        ShapeData mapData = mapDataService.getMapDataByShapeFile(fileName);
-        when(mapDataService.getMapDataByShapeFile(POINT_FILE_NAME)).thenReturn(mapData);
+        ShpData mapData = mapSHPDataService.getMapDataByShapeFile(fileName);
+        when(mapSHPDataService.getMapDataByShapeFile(POINT_FILE_NAME)).thenReturn(mapData);
 
         webTestClient.get().uri(String.format(GET_MAP_DATA_URI_FORMMAT, POINT_FILE_NAME))
                 .exchange()
                 .expectStatus().is2xxSuccessful();
+    }
+
+    @Test
+    @DisplayName("caffeine cache 적용 테스트 - controller 다건 호출 시 호출 시간 체크")
+    void givenFileName_whenGetMapDataByShapeFile_thenShortRequestTime(){
+
+    }
+
+    @Test
+    @DisplayName("caffeine cache 적용 테스트 - cache 만료 시간 이후 자동 refresh 되었는지 체크")
+    void givenFileName_whenGetMapDataByShapeFile_thenAfterTTlApplyRefresh(){
+
     }
 }

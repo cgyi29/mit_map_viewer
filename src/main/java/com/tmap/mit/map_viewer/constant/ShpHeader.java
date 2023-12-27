@@ -1,5 +1,5 @@
 package com.tmap.mit.map_viewer.constant;
-public class FileHeader {
+public class ShpHeader {
     public static final int SIZE = 100;
     public static final int LENGTH = 24;
     public static final int IDX_VERSION = 28;
