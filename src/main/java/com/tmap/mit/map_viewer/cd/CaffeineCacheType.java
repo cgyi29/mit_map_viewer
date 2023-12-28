@@ -9,8 +9,8 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor
 public enum CaffeineCacheType {
     SHP_PARSER_DATA("getShpParserData", "getShpParserData", "%s:%s", 10, 3, 5, TimeUnit.SECONDS),
-    SHX_PARSER_DATA("getShxParserData", "getShpParserData", "%s:%s", 10, 3, 5, TimeUnit.SECONDS),
-    DBF_PARSER_DATA("getDbfParserData", "getShpParserData", "%s:%s", 10, 3, 5, TimeUnit.SECONDS);
+    SHX_PARSER_DATA("getShxParserData", "getShxParserData", "%s:%s", 10, 3, 5, TimeUnit.SECONDS),
+    DBF_PARSER_DATA("getDbfParserData", "getDbfParserData", "%s:%s", 10, 3, 5, TimeUnit.SECONDS);
 
     private final String name;
     private final String key;

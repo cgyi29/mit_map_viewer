@@ -10,12 +10,10 @@ public class DbfDto {
         private String name;
         private char type;
         private int length;
-
         public FieldMetaData(String name, char type, int length){
             this.name = name;
             this.type = type;
             this.length = length;
         }
     }
-
 }

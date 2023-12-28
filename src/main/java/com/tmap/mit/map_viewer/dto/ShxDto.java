@@ -10,7 +10,6 @@ public class ShxDto {
     public static class ResData {
         private int shapeType;
         List<RecordData> records;
-
         public ResData(int shapeType, List<RecordData> records){
             this.shapeType = shapeType;
             this.records = records;
@@ -26,5 +25,4 @@ public class ShxDto {
             this.length = length;
         }
     }
-
 }

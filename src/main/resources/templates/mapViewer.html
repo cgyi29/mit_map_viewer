@@ -152,6 +152,7 @@
                 canvas.addEventListener('mouseleave', () => { currentCanvasId = canvasId; endDrag(); });
             }
 
+
             window.onload = function() {
                 addEvent(pointCanvasId);
                 addEvent(polyLineCanvasId);
@@ -160,6 +161,8 @@
                 pointTypeInit();
                 polyLineInit();
                 polygonTypeInit();
+                //addEvent(polygonCanvasId);
+                //pointTypeInitTest();
             }
         </script>
     </th:head>

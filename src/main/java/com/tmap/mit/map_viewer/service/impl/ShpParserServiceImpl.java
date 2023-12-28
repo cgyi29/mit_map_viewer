@@ -3,7 +3,7 @@ package com.tmap.mit.map_viewer.service.impl;
 import com.tmap.mit.map_viewer.cd.ShapeType;
 import com.tmap.mit.map_viewer.constant.ShpFile;
 import com.tmap.mit.map_viewer.dto.ShpDto;
-import com.tmap.mit.map_viewer.service.ShpService;
+import com.tmap.mit.map_viewer.service.ShpParserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ShpParserServiceImpl implements ShpService {
+public class ShpParserServiceImpl implements ShpParserService {
     @Cacheable(cacheNames = "getShpParserData", key = "'getShpParserData:'+#fileName")
     public ShpDto.ResData getShpParserDataWithCache(String fileName) throws IOException {
         return this.getShpParserDataNoCache(fileName);
