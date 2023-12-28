@@ -2,6 +2,7 @@ package com.tmap.mit.map_viewer.service.impl;
 
 import com.tmap.mit.map_viewer.cd.FieldType;
 import com.tmap.mit.map_viewer.cd.ShapeType;
+import com.tmap.mit.map_viewer.constant.DbfFile;
 import com.tmap.mit.map_viewer.constant.ShpFile;
 import com.tmap.mit.map_viewer.dto.DbfDto;
 import com.tmap.mit.map_viewer.dto.ShpDto;
@@ -35,21 +36,21 @@ public class DbfParserServiceImpl implements DbfParserService {
     }
 
     public DbfDto.ResData getDbfParserDataNoCache(String fileName) throws IOException {
-        ClassPathResource resource = new ClassPathResource(String.format(ShpFile.SHP_FILE_PATH_FORMAT, fileName));
+        ClassPathResource resource = new ClassPathResource(String.format(DbfFile.DBF_FILE_PATH_FORMAT, fileName));
         try (FileChannel channel = new FileInputStream(resource.getFile()).getChannel()) {
             MappedByteBuffer headerBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
             headerBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
             int version = headerBuffer.get() ;
-            int updateYear = 1900 + headerBuffer.get(1);
-            int numberOfRecords = headerBuffer.getInt(4);
-            int headerLength = headerBuffer.getShort(8);
-            int recordLength = headerBuffer.getShort(10);
+            int updateYear = DbfFile.UPDATE_YEAR_MINIMUM + headerBuffer.get(1);
+            int numberOfRecords = headerBuffer.getInt(DbfFile.IDX_NUMBER_OF_RECORD);
+            int headerLength = headerBuffer.getShort(DbfFile.IDX_HEADER_LENGTH);
+            int recordLength = headerBuffer.getShort(DbfFile.IDX_RECORD_LENGTH);
 
-            headerBuffer.position(32);
+            headerBuffer.position(DbfFile.IDX_HEADER_SIZE);
             List<DbfDto.FieldMetaData> fields = new ArrayList<>();
             while (headerBuffer.position() < headerLength -1) {
-                byte[] fieldNameBytes = new byte[11];
+                byte[] fieldNameBytes = new byte[DbfFile.FIELD_NAME_BYTE];
                 headerBuffer.get(fieldNameBytes, 0, 11);
                 String fieldName = new String(fieldNameBytes, StandardCharsets.US_ASCII).trim();
                 char fieldType = (char)(headerBuffer.get()&0xFF);
