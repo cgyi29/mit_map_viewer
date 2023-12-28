@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @AllArgsConstructor
 public enum TargetFile {
-    KoyMahalle("shp", "point"),
-    Duraklar("shp", "polygone"),
-    Hatlar("shp", "polyline");
+    KoyMahalle(new String[]{"shp", "dbf", "shx"}, "point"),
+    Duraklar(new String[]{"shp","dbf","shx"}, "polygone"),
+    Hatlar(new String[]{"shp","dbf","shx"}, "polyline");
 
-    private final String extention;
+    private final String[] extention;
     private final String type;
 
 }

@@ -1,7 +1,7 @@
 package com.tmap.mit.map_viewer.test;
 
-import com.tmap.mit.map_viewer.constant.FileConstant;
-import com.tmap.mit.map_viewer.dto.FieldMetaData;
+import com.tmap.mit.map_viewer.constant.DbfFile;
+import com.tmap.mit.map_viewer.dto.DbfDto;
 import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -21,7 +21,7 @@ import java.util.Map;
 public class DBFParser {
 
     public static void main(String[] args) {
-        ClassPathResource resource = new ClassPathResource(String.format(FileConstant.DBF_FILE_PATH_FORMAT, "Hatlar"));
+        ClassPathResource resource = new ClassPathResource(String.format(DbfFile.DBF_FILE_PATH_FORMAT, "Hatlar"));
         try (FileChannel channel = new FileInputStream(resource.getFile()).getChannel()) {
             MappedByteBuffer headerBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
             headerBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -33,7 +33,7 @@ public class DBFParser {
             int recordLength = headerBuffer.getShort(10);
 
             headerBuffer.position(32);
-            List<FieldMetaData> fields = new ArrayList<>();
+            List<DbfDto.FieldMetaData> fields = new ArrayList<>();
             while (headerBuffer.position() < headerLength -1) {
                 byte[] fieldNameBytes = new byte[11];
                 headerBuffer.get(fieldNameBytes, 0, 11);
@@ -43,7 +43,7 @@ public class DBFParser {
                 int fieldLength = headerBuffer.get()&0xFF;
                 headerBuffer.position(headerBuffer.position() +15);
 
-                fields.add(new FieldMetaData(fieldName, fieldType, fieldLength));
+                fields.add(new DbfDto.FieldMetaData(fieldName, fieldType, fieldLength));
             }
 
             List<Map<String, Object>> records = new ArrayList<>();
@@ -53,7 +53,7 @@ public class DBFParser {
                 recordBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
                 Map<String, Object> record = new HashMap<>();
-                for(FieldMetaData field : fields){
+                for(DbfDto.FieldMetaData field : fields){
                     byte[] data = new byte[field.getLength()];
                     recordBuffer.get(data);
                     record.put(field.getName(), parseData(data, field.getType()));

@@ -40,7 +40,7 @@
                 const response = await fetch('/mapData/KoyMahalle');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
-                const polygonDatas = await shapeData.polyTypeDatas;
+                const polygonData = await shapeData.polyTypeDatas;
 
                 const mapCanvas = await document.getElementById(polygonCanvasId);
                 if(mapCanvas.getContext){
@@ -50,10 +50,10 @@
                     ctx.translate(panX, panY);
                     ctx.scale(zoom, zoom);
 
-                    polygonDatas.forEach(function(polygonData){
-                        polygonData.parts.forEach(function() {
+                    polygonData.forEach(function(data){
+                        data.parts.forEach(function() {
                             ctx.beginPath();
-                            drawLine(polygonData.points, bbox, mapCanvas, ctx);
+                            drawLine(data.points, bbox, mapCanvas, ctx);
                             ctx.fillStyle = "yellow";
                             ctx.fill();
                             ctx.stroke();
@@ -67,7 +67,7 @@
                 const response = await fetch('/mapData/Hatlar');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
-                const polyLineDatas = await shapeData.polyTypeDatas;
+                const polyLineData = await shapeData.polyTypeDatas;
 
                 const mapCanvas = await document.getElementById(polyLineCanvasId);
                 if(mapCanvas.getContext){
@@ -77,10 +77,10 @@
                     ctx.translate(panX, panY);
                     ctx.scale(zoom, zoom);
 
-                    polyLineDatas.forEach(function(polylineData){
-                        polylineData.parts.forEach(function() {
+                    polyLineData.forEach(function(data){
+                        data.parts.forEach(function() {
                             ctx.beginPath();
-                            drawLine(polylineData.points, bbox, mapCanvas, ctx);
+                            drawLine(data.points, bbox, mapCanvas, ctx);
                             ctx.stroke();
                         });
                     });

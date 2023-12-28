@@ -1,6 +1,6 @@
 package com.tmap.mit.map_viewer.controller;
 
-import com.tmap.mit.map_viewer.dto.ShpData;
+import com.tmap.mit.map_viewer.dto.ShpDto;
 import com.tmap.mit.map_viewer.service.MapSHPDataService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class MapDataControllerTest {
         String fileName = POINT_FILE_NAME;
 
         // when & then
-        ShpData mapData = mapSHPDataService.getMapDataByShapeFile(fileName);
+        ShpDto mapData = mapSHPDataService.getMapDataByShapeFile(fileName);
         when(mapSHPDataService.getMapDataByShapeFile(POINT_FILE_NAME)).thenReturn(mapData);
 
         webTestClient.get().uri(String.format(GET_MAP_DATA_URI_FORMMAT, POINT_FILE_NAME))

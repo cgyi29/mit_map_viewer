@@ -1,7 +1,7 @@
 package com.tmap.mit.map_viewer.controller;
 
-import com.tmap.mit.map_viewer.dto.ShpData;
-import com.tmap.mit.map_viewer.service.MapDataService;
+import com.tmap.mit.map_viewer.dto.ShpDto;
+import com.tmap.mit.map_viewer.service.ShpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,10 +19,10 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @RequestMapping("/mapData")
 public class MapDataController {
-    private final MapDataService mapDataService;
+    private final ShpService shpService;
 
     @GetMapping("/{fileName}")
-    public ShpData getMapDataByShapeFile(@PathVariable String fileName) throws IOException {
-        return  mapDataService.getMapDataByShapeFileWithCache(fileName);
+    public ShpDto.ResData getMapDataByShapeFile(@PathVariable String fileName) throws IOException {
+        return  shpService.getShpParserDataWithCache(fileName);
     }
 }
