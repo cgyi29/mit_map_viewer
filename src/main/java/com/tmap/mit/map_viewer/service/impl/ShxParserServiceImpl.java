@@ -24,11 +24,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ShxParserServiceImpl implements ShxParserService {
     @Cacheable(cacheNames = "getShxParserData", key = "'getShxParserData:'+#fileName")
-    public ShpDto.ResData getShxParserDataWithCache(String fileName) throws IOException {
+    public ShxDto.ResData getShxParserDataWithCache(String fileName) throws IOException {
         return this.getShxParserDataNoCache(fileName);
     }
 
-    public ShpDto.ResData getShxParserDataNoCache(String fileName) throws IOException {
+    public ShxDto.ResData getShxParserDataNoCache(String fileName) throws IOException {
         ClassPathResource resource = new ClassPathResource(String.format(ShpFile.SHP_FILE_PATH_FORMAT, fileName));
         try (FileChannel channel = new FileInputStream(resource.getFile()).getChannel()) {
             MappedByteBuffer headerBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, ShxFile.HEADER_SIZE);
@@ -50,8 +50,8 @@ public class ShxParserServiceImpl implements ShxParserService {
                 records.add(new ShxDto.RecordData(recordOffset * 2, recordLength *2));
                 position += ShxFile.RECORD_SIZE;
             }
-        }
 
-        return null;
+            return new ShxDto.ResData(shapeType, records);
+        }
     }
 }

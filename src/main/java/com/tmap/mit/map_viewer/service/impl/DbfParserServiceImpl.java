@@ -30,11 +30,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DbfParserServiceImpl implements DbfParserService {
     @Cacheable(cacheNames = "getDbfParserData", key = "'getDbfParserData:'+#fileName")
-    public ShpDto.ResData getDbfParserDataWithCache(String fileName) throws IOException {
+    public DbfDto.ResData getDbfParserDataWithCache(String fileName) throws IOException {
         return this.getDbfParserDataNoCache(fileName);
     }
 
-    public ShpDto.ResData getDbfParserDataNoCache(String fileName) throws IOException {
+    public DbfDto.ResData getDbfParserDataNoCache(String fileName) throws IOException {
         ClassPathResource resource = new ClassPathResource(String.format(ShpFile.SHP_FILE_PATH_FORMAT, fileName));
         try (FileChannel channel = new FileInputStream(resource.getFile()).getChannel()) {
             MappedByteBuffer headerBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
@@ -75,8 +75,8 @@ public class DbfParserServiceImpl implements DbfParserService {
                 records.add(record);
                 recordStartPosition += recordLength;
             }
+            return new DbfDto.ResData(fields, records);
         }
-        return null;
     }
 
     private static Object parseData(byte[] data, char type){
