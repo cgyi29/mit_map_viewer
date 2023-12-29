@@ -51,7 +51,7 @@ public class DbfParserServiceImpl implements DbfParserService {
             List<DbfDto.FieldMetaData> fields = new ArrayList<>();
             while (headerBuffer.position() < headerLength -1) {
                 byte[] fieldNameBytes = new byte[DbfFile.FIELD_NAME_BYTE];
-                headerBuffer.get(fieldNameBytes, 0, 11);
+                headerBuffer.get(fieldNameBytes, 0, DbfFile.FIELD_NAME_BYTE);
                 String fieldName = new String(fieldNameBytes, StandardCharsets.US_ASCII).trim();
                 char fieldType = (char)(headerBuffer.get()&0xFF);
                 headerBuffer.position(headerBuffer.position() +4);

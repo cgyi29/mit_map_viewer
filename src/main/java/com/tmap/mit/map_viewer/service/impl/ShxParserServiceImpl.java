@@ -29,7 +29,7 @@ public class ShxParserServiceImpl implements ShxParserService {
     }
 
     public ShxDto.ResData getShxParserDataNoCache(String fileName) throws IOException {
-        ClassPathResource resource = new ClassPathResource(String.format(ShpFile.SHP_FILE_PATH_FORMAT, fileName));
+        ClassPathResource resource = new ClassPathResource(String.format(ShxFile.SHX_FILE_PATH_FORMAT, fileName));
         try (FileChannel channel = new FileInputStream(resource.getFile()).getChannel()) {
             MappedByteBuffer headerBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, ShxFile.HEADER_SIZE);
             headerBuffer.order(ByteOrder.LITTLE_ENDIAN);
