@@ -2,7 +2,6 @@ package com.tmap.mit.map_viewer.dto;
 
 import lombok.Getter;
 
-import java.util.List;
 import java.util.Map;
 
 @Getter

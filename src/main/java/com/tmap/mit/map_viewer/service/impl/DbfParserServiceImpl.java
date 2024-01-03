@@ -71,7 +71,11 @@ public class DbfParserServiceImpl implements DbfParserService {
                 for(DbfDto.FieldMetaData field : fields){
                     byte[] data = new byte[field.getLength()];
                     recordBuffer.get(data);
-                    record.put(field.getName(), parseData(data, field.getType()));
+                    try {
+                        record.put(field.getName(), parseData(data, field.getType()));
+                    }catch (Exception e){
+                        log.error(String.valueOf(e));
+                    }
                 }
                 records.add(record);
                 recordStartPosition += recordLength;

@@ -12,32 +12,67 @@
             let dragStart = null;
             let currentCanvasId = '';
 
+            let pointAttrDatas = [];
+            let pointDatas = [];
+
+            async function pointAttrInit(){
+                const response = await fetch('/mapData/dbf/Duraklar');
+                if(response.ok){
+                    const attrDatas = await response.json();
+                    pointAttrDatas = attrDatas.records;
+                }
+            }
+
+            function displayAttr(idx){
+                alert(JSON.stringify(pointAttrDatas[idx]));
+            }
+
+            function onClick(event){
+                const mapCanvas = document.getElementById(currentCanvasId);
+                const rect = mapCanvas.getBoundingClientRect();
+                const scaleX = mapCanvas.width / rect.width;
+                const scaleY = mapCanvas.height / rect.height;
+                const x = (event.clientX - rect.left) * scaleX;
+                const y = (event.clientY - rect.top) * scaleY;
+
+                const clickedPointIndex = pointDatas.findIndex(point => Math.hypot(point.x - x, point.y -y) <5);
+
+                if(clickedPointIndex !== -1){
+                    displayAttr(pointDatas[clickedPointIndex]);
+                }
+            }
+
             async function pointTypeInit() {
-                const response = await fetch('/mapData/Duraklar');
-                const shapeData = await response.json();
-                const bbox = await shapeData.bbox;
-                const points = await shapeData.points;
+                await pointAttrInit();
 
-                const mapCanvas = document.getElementById(pointCanvasId);
-                if(mapCanvas.getContext) {
-                    const ctx = mapCanvas.getContext('2d');
-                    ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-                    ctx.save();
-                    ctx.translate(panX, panY);
-                    ctx.scale(zoom, zoom);
+                const response = await fetch('/mapData/shp/Duraklar');
+                if(response.ok) {
+                    const shapeData = await response.json();
+                    const bbox = await shapeData.bbox;
+                    const points = await shapeData.points;
 
-                    points.forEach(point => {
-                        let trPoint = scalePoint(point.x, point.y, bbox, mapCanvas);
-                        ctx.beginPath();
-                        ctx.arc(trPoint.x, trPoint.y, 2, 0, 2 * Math.PI);
-                        ctx.fill();
-                    });
-                    ctx.restore();
+                    const mapCanvas = document.getElementById(pointCanvasId);
+                    if(mapCanvas.getContext) {
+                        const ctx = mapCanvas.getContext('2d');
+                        ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+                        ctx.save();
+                        ctx.translate(panX, panY);
+                        ctx.scale(zoom, zoom);
+
+                        points.forEach((point, index) => {
+                            let trPoint = scalePoint(point.x, point.y, bbox, mapCanvas);
+                            ctx.beginPath();
+                            ctx.arc(trPoint.x, trPoint.y, 2, 0, 2 * Math.PI);
+                            ctx.fill();
+                            pointDatas.push({x:trPoint.x, y:trPoint.y, index: index});
+                        });
+                        ctx.restore();
+                    }
                 }
             }
 
             async function polygonTypeInit(){
-                const response = await fetch('/mapData/KoyMahalle');
+                const response = await fetch('/mapData/shp/KoyMahalle');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
                 const polygonData = await shapeData.polyTypeDatas;
@@ -64,7 +99,7 @@
             }
 
             async function polyLineInit(){
-                const response = await fetch('/mapData/Hatlar');
+                const response = await fetch('/mapData/shp/Hatlar');
                 const shapeData = await response.json();
                 const bbox = await shapeData.bbox;
                 const polyLineData = await shapeData.polyTypeDatas;
@@ -150,6 +185,7 @@
                 canvas.addEventListener('mousemove', (event) => { currentCanvasId = canvasId; onDrag(event); });
                 canvas.addEventListener('mouseup', (event) => { currentCanvasId = canvasId; endDrag(event); });
                 canvas.addEventListener('mouseleave', () => { currentCanvasId = canvasId; endDrag(); });
+                canvas.addEventListener('click', (event) => { currentCanvasId = canvasId; onClick(event); });
             }
 
 
@@ -161,8 +197,6 @@
                 pointTypeInit();
                 polyLineInit();
                 polygonTypeInit();
-                //addEvent(polygonCanvasId);
-                //pointTypeInitTest();
             }
 
 

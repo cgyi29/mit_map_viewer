@@ -19,18 +19,18 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ShapeDataServiceImpl implements ShapeDataService {
+public class ShapeDataServiceImpl  {
     private final ShpParserService shpParserService;
     private final ShxParserService shxParserService;
     private final DbfParserService dbfParserService;
 
-    @Override
-    public List<ShapeDataDto> getShapeFileDataWithCache(String fileName) throws IOException {
+   /* @Override
+    public ShapeDataDto getShapeFileDataWithCache(String fileName) throws IOException {
         return getShapeFileDataNoCache(fileName);
     }
 
     @Override
-    public List<ShapeDataDto> getShapeFileDataNoCache(String fileName) throws IOException {
+    public ShapeDataDto getShapeFileDataNoCache(String fileName) throws IOException {
         ShpDto.ResData shpRes = shpParserService.getShpParserDataWithCache(fileName);
         DbfDto.ResData dbfRes = dbfParserService.getDbfParserDataWithCache(fileName);
 
@@ -41,5 +41,5 @@ public class ShapeDataServiceImpl implements ShapeDataService {
         }
 
         return shapeDataDataDtos;
-    }
+    }*/
 }
