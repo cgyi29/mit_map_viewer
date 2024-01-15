@@ -1,211 +1,330 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.w3.org/1999/html" lang="en">
-    <th:head>
-        <script th:inline="javascript">
-            let pointCanvasId = 'pointMapCanvas';
-            let polyLineCanvasId = 'polyLineMapCanvas';
-            let polygonCanvasId = 'polygonMapCanvas';
+<th:head>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
-            let zoom = 1;
-            let panX = 0;
-            let panY = 0;
-            let dragStart = null;
-            let currentCanvasId = '';
 
-            let pointAttrDatas = [];
-            let pointDatas = [];
+    <script th:inline="javascript">
+        let zoom = 1;
+        let panX = 0;
+        let panY = 0;
+        let dragStart = null;
+        let currentCanvasId = '';
 
-            async function pointAttrInit(){
-                const response = await fetch('/mapData/dbf/Duraklar');
-                if(response.ok){
-                    const attrDatas = await response.json();
-                    pointAttrDatas = attrDatas.records;
-                }
-            }
+        let pointAttrDatas = [];
+        let pointDatas = [];
 
-            function displayAttr(idx){
-                alert(JSON.stringify(pointAttrDatas[idx]));
-            }
+        let shpeData = {
+            pointType: null,
+            polyLineType: null,
+            polygonType: null,
+            largestBbox: { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
+        };
 
-            function onClick(event){
-                const mapCanvas = document.getElementById(currentCanvasId);
-                const rect = mapCanvas.getBoundingClientRect();
-                const scaleX = mapCanvas.width / rect.width;
-                const scaleY = mapCanvas.height / rect.height;
-                const x = (event.clientX - rect.left) * scaleX;
-                const y = (event.clientY - rect.top) * scaleY;
-
-                const clickedPointIndex = pointDatas.findIndex(point => Math.hypot(point.x - x, point.y -y) <5);
-
-                if(clickedPointIndex !== -1){
-                    displayAttr(pointDatas[clickedPointIndex]);
-                }
-            }
-
-            async function pointTypeInit() {
-                await pointAttrInit();
-
+        async function pointTypeInit() {
+            await pointAttrInit();
+            if (!shpeData.pointType) {
                 const response = await fetch('/mapData/shp/Duraklar');
-                if(response.ok) {
-                    const shapeData = await response.json();
-                    const bbox = await shapeData.bbox;
-                    const points = await shapeData.points;
-
-                    const mapCanvas = document.getElementById(pointCanvasId);
-                    if(mapCanvas.getContext) {
-                        const ctx = mapCanvas.getContext('2d');
-                        ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-                        ctx.save();
-                        ctx.translate(panX, panY);
-                        ctx.scale(zoom, zoom);
-
-                        points.forEach((point, index) => {
-                            let trPoint = scalePoint(point.x, point.y, bbox, mapCanvas);
-                            ctx.beginPath();
-                            ctx.arc(trPoint.x, trPoint.y, 2, 0, 2 * Math.PI);
-                            ctx.fill();
-                            pointDatas.push({x:trPoint.x, y:trPoint.y, index: index});
-                        });
-                        ctx.restore();
-                    }
+                if (response.ok) {
+                    const responseData = await response.json();
+                    shpeData.pointType = responseData;
+                    updateLargestBBox(responseData.bbox);
                 }
             }
+        }
 
-            async function polygonTypeInit(){
+        async function polygonTypeInit(){
+            if (!shpeData.polygonType) {
                 const response = await fetch('/mapData/shp/KoyMahalle');
-                const shapeData = await response.json();
-                const bbox = await shapeData.bbox;
-                const polygonData = await shapeData.polyTypeDatas;
-
-                const mapCanvas = await document.getElementById(polygonCanvasId);
-                if(mapCanvas.getContext){
-                    const ctx = await mapCanvas.getContext('2d');
-                    ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-                    ctx.save();
-                    ctx.translate(panX, panY);
-                    ctx.scale(zoom, zoom);
-
-                    polygonData.forEach(function(data){
-                        data.parts.forEach(function() {
-                            ctx.beginPath();
-                            drawLine(data.points, bbox, mapCanvas, ctx);
-                            ctx.fillStyle = "yellow";
-                            ctx.fill();
-                            ctx.stroke();
-                        });
-                    });
-                    ctx.restore();
+                if (response.ok) {
+                    const responseData = await response.json();
+                    shpeData.polygonType = responseData;
+                    updateLargestBBox(responseData.bbox);
                 }
             }
+        }
 
-            async function polyLineInit(){
+        async function polyLineInit(){
+            if (!shpeData.polyLineType) {
                 const response = await fetch('/mapData/shp/Hatlar');
-                const shapeData = await response.json();
-                const bbox = await shapeData.bbox;
-                const polyLineData = await shapeData.polyTypeDatas;
-
-                const mapCanvas = await document.getElementById(polyLineCanvasId);
-                if(mapCanvas.getContext){
-                    const ctx = await mapCanvas.getContext('2d');
-                    ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-                    ctx.save();
-                    ctx.translate(panX, panY);
-                    ctx.scale(zoom, zoom);
-
-                    polyLineData.forEach(function(data){
-                        data.parts.forEach(function() {
-                            ctx.beginPath();
-                            drawLine(data.points, bbox, mapCanvas, ctx);
-                            ctx.stroke();
-                        });
-                    });
-                    ctx.restore();
+                if (response.ok) {
+                    const responseData = await response.json();
+                    shpeData.polyLineType = responseData;
+                    updateLargestBBox(responseData.bbox);
                 }
             }
+        }
 
-            function scalePoint(x, y, bbox, canvas) {
+        async function drawPointTypeMap(){
+            const shapeData = await shpeData.pointType;
+            const points = await shapeData.points;
+            const bbox = await  shapeData.bbox;
+
+            const mapCanvas = document.getElementById('pointMapCanvas');
+            if(mapCanvas.getContext) {
+                const ctx = mapCanvas.getContext('2d');
+                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+                ctx.save(); // translate, style, 클리핑 경로
+                ctx.translate(panX, panY);
+                ctx.scale(zoom, zoom);
+                ctx.fillStyle='blue';
+
+                points.forEach((point, index) => {
+                    let trPoint = scalePoint(point.x, point.y, bbox, mapCanvas);
+                    ctx.beginPath();
+                    ctx.arc(trPoint.x, trPoint.y, 0.5, 0, 2 * Math.PI);
+                    ctx.fill();
+                    pointDatas.push({x:trPoint.x, y:trPoint.y, index: index});
+                });
+                ctx.restore();
+            }
+        }
+
+        async function drawPolygonMap(){
+            const shapeData =  shpeData.polygonType;
+            const polygonData = await shapeData.polyTypeDatas;
+            const bbox = await  shapeData.bbox;
+
+            const mapCanvas = await document.getElementById('polygonMapCanvas');
+            if(mapCanvas.getContext){
+                const ctx = await mapCanvas.getContext('2d');
+                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+                ctx.save();
+                ctx.translate(panX, panY);
+                ctx.scale(zoom, zoom);
+
+                polygonData.forEach(function(data){
+                    data.parts.forEach(function() {
+                        ctx.beginPath();
+                        drawLine(data.points, bbox, mapCanvas, ctx);
+                        ctx.fillStyle = "yellow";
+                        ctx.fill();
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }
+        }
+
+        async function drawPolyLineMap(){
+            const shapeData = await shpeData.polyLineType;
+            const polyLineData = await shapeData.polyTypeDatas;
+            const bbox = await  shapeData.bbox;
+
+            const mapCanvas = await document.getElementById('polyLineMapCanvas');
+            if(mapCanvas.getContext){
+                const ctx = await mapCanvas.getContext('2d');
+                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+                ctx.save();
+                ctx.translate(panX, panY);
+                ctx.scale(zoom, zoom);
+                ctx.strokeStyle='red';
+
+                polyLineData.forEach(function(data){
+                    data.parts.forEach(function() {
+                        ctx.beginPath();
+                        drawLine(data.points, bbox, mapCanvas, ctx);
+                        ctx.stroke();
+                    });
+                });
+                ctx.restore();
+            }
+        }
+
+        function updateLargestBBox(bbox) {
+            shpeData.largestBbox.minX = Math.min(shpeData.largestBbox.minX, bbox.minX);
+            shpeData.largestBbox.minY = Math.min(shpeData.largestBbox.minY, bbox.minY);
+            shpeData.largestBbox.maxX = Math.max(shpeData.largestBbox.maxX, bbox.maxX);
+            shpeData.largestBbox.maxY = Math.max(shpeData.largestBbox.maxY, bbox.maxY);
+        }
+
+        $( function() {
+            $( "#sortable" ).sortable({
+                update: function(event, ui) {
+                    updateCanvasOrder();
+                }
+            });
+            $( "#sortable" ).disableSelection();
+        });
+
+        function updateCanvasOrder() {
+            const orderedIds = $("#sortable").sortable("toArray", { attribute: "data-canvasid" });
+            orderedIds.forEach((id, index) => {
+                document.getElementById(id).style.zIndex = orderedIds.length - index;
+            });
+
+            const firstCanvasId = orderedIds[0];
+            currentCanvasId = firstCanvasId;  // 현재 캔버스 ID를 설정
+            removeCommonEventListeners();
+            addCommonEventListeners();
+            addClickEventListener(firstCanvasId);
+        }
+
+        function addCommonEventListeners() {
+            ['pointMapCanvas', 'polyLineMapCanvas', 'polygonMapCanvas'].forEach(canvasId => {
+                const canvas = document.getElementById(canvasId);
+                canvas.addEventListener('wheel', scrollHandler);
+                canvas.addEventListener('mousedown', startDrag);
+                canvas.addEventListener('mousemove', onDrag);
+                canvas.addEventListener('mouseup', endDrag);
+                canvas.addEventListener('mouseleave', endDrag);
+            });
+        }
+
+        function addClickEventListener(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            canvas.addEventListener('click', onClick);
+        }
+
+        function removeCommonEventListeners() {
+            ['pointMapCanvas', 'polyLineMapCanvas', 'polygonMapCanvas'].forEach(canvasId => {
+                const canvas = document.getElementById(canvasId);
+                if (canvas) {
+                    canvas.removeEventListener('wheel', scrollHandler);
+                    canvas.removeEventListener('mousedown', startDrag);
+                    canvas.removeEventListener('mousemove', onDrag);
+                    canvas.removeEventListener('mouseup', endDrag);
+                    canvas.removeEventListener('mouseleave', endDrag);
+                }
+            });
+        }
+
+        async function pointAttrInit(){
+            const response = await fetch('/mapData/dbf/Duraklar');
+            if(response.ok){
+                const attrDatas = await response.json();
+                pointAttrDatas = attrDatas.records;
+            }
+        }
+
+        function displayAttr(idx){
+            document.getElementById('dataDisplay').innerText = JSON.stringify(pointAttrDatas[idx]);
+        }
+
+        function onClick(event){
+            if (!currentCanvasId) {
+                console.error('currentCanvasId가 설정되지 않았습니다.');
+                return;
+            }
+
+            const mapCanvas = document.getElementById(currentCanvasId);
+            const rect = mapCanvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            pointDatas.forEach(pointData => {
+                const distance = Math.hypot(pointData.x - x, pointData.y - y);
+                if(distance < 10){
+                    displayAttr(pointData.index);
+                }
+            });
+        }
+
+        function scalePoint(x, y, bbox, canvas) {
+            let largestBbox = shpeData.largestBbox;
+
+            if(bbox.minX===largestBbox.minX && bbox.minY===largestBbox.minY && bbox.maxX===largestBbox.maxX && bbox.maxY===largestBbox.maxY){
                 let transformX = ((bbox.maxX - x) / (bbox.maxX - bbox.minX)) * canvas.width;
                 let transformY = ((bbox.maxY - y) / (bbox.maxY - bbox.minY)) * canvas.height;
                 transformX = canvas.width - transformX;
                 return { x: transformX, y: transformY };
+            }else{
+                let adjustBbox = adjustBboxScale(bbox);
+                let transformX = ((adjustBbox.maxX - x) / (adjustBbox.maxX - adjustBbox.minX)) * canvas.width;
+                let transformY = ((adjustBbox.maxY - y) / (adjustBbox.maxY - adjustBbox.minY)) * canvas.height;
+                transformX = canvas.width - transformX;
+                return { x: transformX, y: transformY };
             }
+        }
 
-            function drawLine(points, bbox, canvas, ctx){
-                points.forEach((start, index) => {
-                    let point = scalePoint(points[index].x, points[index].y, bbox, canvas);
-                    if (index === 0) {
-                        ctx.moveTo(point.x, point.y);
-                    } else {
-                        ctx.lineTo(point.x, point.y);
-                    }
-                });
-            }
+        function adjustBboxScale(bbox) {
+            let scaleX = (shpeData.largestBbox.maxX - shpeData.largestBbox.minX) / (bbox.maxX - bbox.minX);
+            let scaleY = (shpeData.largestBbox.maxY - shpeData.largestBbox.minY) / (bbox.maxY - bbox.minY);
+            return {
+                minX: shpeData.largestBbox.minX + (bbox.minX - bbox.minX) * scaleX,
+                minY: shpeData.largestBbox.minY + (bbox.minY - bbox.minY) * scaleY,
+                maxX: shpeData.largestBbox.minX + (bbox.maxX - bbox.minX) * scaleX,
+                maxY: shpeData.largestBbox.minY + (bbox.maxY - bbox.minY) * scaleY
+            };
+        }
 
-            function scrollHandler(event) {
-                event.preventDefault();
-                const scaleAmount = 1.1;
-                const preZoom = zoom;
+        function drawLine(points, bbox,  canvas, ctx){
+            points.forEach((start, index) => {
+                let point = scalePoint(points[index].x, points[index].y, bbox, canvas);
+                if (index === 0) {
+                    ctx.moveTo(point.x, point.y);
+                } else {
+                    ctx.lineTo(point.x, point.y);
+                }
+            });
+        }
 
-                const mapCanvas = document.getElementById(currentCanvasId);
-                const cursorX = event.clientX - mapCanvas.offsetLeft;
-                const cursorY = event.clientY - mapCanvas.offsetTop;
-                zoom *= event.deltaY < 0 ? scaleAmount : 1 / scaleAmount;
-                panX -= cursorX * (zoom - preZoom);
-                panY -= cursorY * (zoom - preZoom);
+        function scrollHandler(event) {
+            event.preventDefault();
+            const scaleAmount = 1.1;
+            const preZoom = zoom;
+            const mapCanvas = document.getElementById(currentCanvasId);
+            const cursorX = event.clientX - mapCanvas.offsetLeft;
+            const cursorY = event.clientY - mapCanvas.offsetTop;
+            zoom *= event.deltaY < 0 ? scaleAmount : 1 / scaleAmount;
+            panX -= cursorX * (zoom - preZoom);
+            panY -= cursorY * (zoom - preZoom);
 
+            drawCanvas();
+        }
+
+        function startDrag(event) {
+            dragStart = { x: event.clientX - panX, y: event.clientY - panY };
+        }
+
+        function onDrag(event) {
+            if (dragStart !== null) {
+                panX = event.clientX - dragStart.x;
+                panY = event.clientY - dragStart.y;
                 drawCanvas();
             }
+        }
 
-            function startDrag(event) {
-                dragStart = { x: event.clientX - panX, y: event.clientY - panY };
-            }
+        function endDrag() {
+            dragStart = null;
+        }
 
-            function onDrag(event) {
-                if (dragStart !== null) {
-                    panX = event.clientX - dragStart.x;
-                    panY = event.clientY - dragStart.y;
-                    drawCanvas();
-                }
-            }
+        async function drawCanvas() {
+            await drawPointTypeMap();
+            await drawPolyLineMap();
+            await drawPolygonMap();
+        }
 
-            function endDrag() {
-                dragStart = null;
-            }
+        window.onload = async function() {
+            await pointTypeInit();
+            await polyLineInit();
+            await polygonTypeInit();
 
-            async function drawCanvas() {
-                if(currentCanvasId === pointCanvasId) await pointTypeInit();
-                if(currentCanvasId === polyLineCanvasId)  await polyLineInit();
-                if(currentCanvasId === polygonCanvasId) await polygonTypeInit();
-            }
+            await drawCanvas();
 
-            function addEvent(canvasId) {
-                const canvas = document.getElementById(canvasId);
-                canvas.addEventListener('wheel', (event) => { currentCanvasId = canvasId; scrollHandler(event); });
-                canvas.addEventListener('mousedown', (event) => { currentCanvasId = canvasId; startDrag(event); });
-                canvas.addEventListener('mousemove', (event) => { currentCanvasId = canvasId; onDrag(event); });
-                canvas.addEventListener('mouseup', (event) => { currentCanvasId = canvasId; endDrag(event); });
-                canvas.addEventListener('mouseleave', () => { currentCanvasId = canvasId; endDrag(); });
-                canvas.addEventListener('click', (event) => { currentCanvasId = canvasId; onClick(event); });
-            }
+            addCommonEventListeners();
+            updateCanvasOrder();
 
+        }
+    </script>
+</th:head>
+<th:body>
+    <div id="canvasContainer" style="position: relative; width: 800px; height: 500px;">
+        <canvas id="pointMapCanvas" width="800" height="500" style="position: absolute; top: 0; left: 0; border:1px solid"></canvas>
+        <canvas id="polyLineMapCanvas" width="800" height="500" style="position: absolute; top: 0; left: 0; border:1px solid"></canvas>
+        <canvas id="polygonMapCanvas" width="800" height="500" style="position: absolute; top: 0; left: 0; border:1px solid"></canvas>
+    </div>
+    <div id="layerList" style="margin-top: 10px; width: 800px; border: 1px solid black;">
+        <ul id="sortable">
+            <li class="ui-state-default" data-canvasid="pointMapCanvas">Point Canvas</li>
+            <li class="ui-state-default" data-canvasid="polyLineMapCanvas">Polyl                                                                                                                                   ine Canvas</li>
+            <li class="ui-state-default" data-canvasid="polygonMapCanvas">Polygon Canvas</li>
+        </ul>
+    </div>
 
-            window.onload = function() {
-                addEvent(pointCanvasId);
-                addEvent(polyLineCanvasId);
-                addEvent(polygonCanvasId);
-
-                pointTypeInit();
-                polyLineInit();
-                polygonTypeInit();
-            }
-
-
-        </script>
-    </th:head>
-    <th:body>
-        <canvas id="pointMapCanvas" width="800" height="500" style="border:1px solid"></canvas>
-        <canvas id="polyLineMapCanvas" width="800" height="500" style="border:1px solid"></canvas>
-        <canvas id="polygonMapCanvas" width="800" height="500" style="border:1px solid"></canvas>
-    </th:body>
+    <div id="dataDisplay" style="border: 1px solid black; margin-top: 10px; width: 800px; height: 100px;"></div>
+</th:body>
 
 </html>
