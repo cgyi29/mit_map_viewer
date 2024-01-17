@@ -16,6 +16,12 @@
         let pointAttrDatas = [];
         let pointDatas = [];
 
+        let polyLineAttrDatas = [];
+        let polyLineDatas = [];
+
+        let polygonAttrDatas = [];
+        let polygonDatas = [];
+
         let shpeData = {
             pointType: null,
             polyLineType: null,
@@ -36,6 +42,7 @@
         }
 
         async function polygonTypeInit(){
+            await polygoneAttrInit();
             if (!shpeData.polygonType) {
                 const response = await fetch('/mapData/shp/KoyMahalle');
                 if (response.ok) {
@@ -47,6 +54,7 @@
         }
 
         async function polyLineInit(){
+            await polyLineAttrInit();
             if (!shpeData.polyLineType) {
                 const response = await fetch('/mapData/shp/Hatlar');
                 if (response.ok) {
@@ -98,10 +106,21 @@
                 polygonData.forEach(function(data){
                     data.parts.forEach(function() {
                         ctx.beginPath();
-                        drawLine(data.points, bbox, mapCanvas, ctx);
+
+                        let transformedPoint = [];
+                        data.points.forEach((pointData, index) => {
+                            let point = scalePoint(pointData.x, pointData.y, bbox, mapCanvas);
+                            transformedPoint.push(point);
+                            if (index === 0) {
+                                ctx.moveTo(point.x, point.y);
+                            } else {
+                                ctx.lineTo(point.x, point.y);
+                            }
+                        });
                         ctx.fillStyle = "yellow";
                         ctx.fill();
                         ctx.stroke();
+                        polygonDatas.push(transformedPoint);
                     });
                 });
                 ctx.restore();
@@ -123,10 +142,20 @@
                 ctx.strokeStyle='red';
 
                 polyLineData.forEach(function(data){
-                    data.parts.forEach(function() {
+                    data.parts.forEach(function(part) {
                         ctx.beginPath();
-                        drawLine(data.points, bbox, mapCanvas, ctx);
+                        let transformedPoint = [];
+                        data.points.forEach((pointData, index) => {
+                            let point = scalePoint(pointData.x, pointData.y, bbox, mapCanvas);
+                            transformedPoint.push(point);
+                            if (index === 0) {
+                                ctx.moveTo(point.x, point.y);
+                            } else {
+                                ctx.lineTo(point.x, point.y);
+                            }
+                        });
                         ctx.stroke();
+                        polyLineDatas.push(transformedPoint);
                     });
                 });
                 ctx.restore();
@@ -199,8 +228,40 @@
             }
         }
 
+        async function polyLineAttrInit(){
+            const response = await fetch('/mapData/dbf/Hatlar');
+            if(response.ok){
+                const attrDatas = await response.json();
+                polyLineAttrDatas = attrDatas.records;
+            }
+        }
+
+        async function polygoneAttrInit(){
+            const response = await fetch('/mapData/dbf/KoyMahalle');
+            if(response.ok){
+                const attrDatas = await response.json();
+                polygonAttrDatas = attrDatas.records;
+            }
+        }
+
         function displayAttr(idx){
             document.getElementById('dataDisplay').innerText = JSON.stringify(pointAttrDatas[idx]);
+        }
+
+        function displayPolyLineAttr(idx){
+            const attrData = polyLineAttrDatas[idx];
+            if (attrData) {
+                document.getElementById('dataDisplay').innerText = JSON.stringify(attrData, null, 2);
+            }
+
+        }
+
+        function displayPolygonAttr(idx){
+            const attrData = polygonAttrDatas[idx];
+            if (attrData) {
+                document.getElementById('dataDisplay').innerText = JSON.stringify(attrData, null, 2);
+            }
+
         }
 
         function onClick(event){
@@ -208,19 +269,73 @@
                 console.error('currentCanvasId가 설정되지 않았습니다.');
                 return;
             }
-
             const mapCanvas = document.getElementById(currentCanvasId);
             const rect = mapCanvas.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
 
-            pointDatas.forEach(pointData => {
-                const distance = Math.hypot(pointData.x - x, pointData.y - y);
-                if(distance < 10){
-                    displayAttr(pointData.index);
+            if(currentCanvasId === 'polyLineMapCanvas' ){
+                const closestPolyLine = findClosestPolyLine(x,y);
+                if(closestPolyLine != null){
+                    displayPolyLineAttr(closestPolyLine.index);
                 }
-            });
+            }
+
+            if(currentCanvasId === 'polygonMapCanvas'){
+                const clickPoint = { x: x, y: y};
+
+                for (let i = 0; i < polygonDatas.length; i++) {
+                    if (isPointInPolygon(clickPoint, polygonDatas[i])) {
+                        displayPolygonAttr(i);
+                        break;
+                    }
+                }
+            }
+
+            if(currentCanvasId === 'pointMapCanvas') {
+                pointDatas.forEach(pointData => {
+                    const distance = Math.hypot(pointData.x - x, pointData.y - y);
+                    if (distance < 10) {
+                        displayAttr(pointData.index);
+                    }
+                });
+            }
         }
+
+        function isPointInPolygon(point, polygon) {
+            let x = point.x, y = point.y;
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                let xi = polygon[i].x, yi = polygon[i].y;
+                let xj = polygon[j].x, yj = polygon[j].y;
+                let intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+
+        function findClosestPolyLine(clickX, clickY) {
+            let minDistance = Infinity;
+            let closestPolyLineIndex = null;
+
+            polyLineDatas.forEach((points, index) => {
+                points.forEach(point => {
+                    let distance = distanceBetweenPoints(clickX, clickY, point.x, point.y);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestPolyLineIndex = index;
+                    }
+                });
+            });
+
+            return closestPolyLineIndex != null ? { index: closestPolyLineIndex } : null;
+        }
+
+        function distanceBetweenPoints(x1, y1, x2, y2) {
+            return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+        }
+
 
         function scalePoint(x, y, bbox, canvas) {
             let largestBbox = shpeData.largestBbox;
@@ -248,17 +363,6 @@
                 maxX: shpeData.largestBbox.minX + (bbox.maxX - bbox.minX) * scaleX,
                 maxY: shpeData.largestBbox.minY + (bbox.maxY - bbox.minY) * scaleY
             };
-        }
-
-        function drawLine(points, bbox,  canvas, ctx){
-            points.forEach((start, index) => {
-                let point = scalePoint(points[index].x, points[index].y, bbox, canvas);
-                if (index === 0) {
-                    ctx.moveTo(point.x, point.y);
-                } else {
-                    ctx.lineTo(point.x, point.y);
-                }
-            });
         }
 
         function scrollHandler(event) {
