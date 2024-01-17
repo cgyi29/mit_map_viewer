@@ -1,7 +1,7 @@
 package com.tmap.mit.map_viewer.controller;
 
 import com.tmap.mit.map_viewer.dto.ShpDto;
-import com.tmap.mit.map_viewer.service.MapSHPDataService;
+import com.tmap.mit.map_viewer.service.ShpParserServic;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ class MapDataControllerTest {
     private WebTestClient webTestClient;
 
     @MockBean
-    private MapSHPDataService mapSHPDataService;
+    private ShpParserServic mapSHPDataService;
 
     private final String GET_MAP_DATA_URI_FORMMAT = "/mapData/%s";
     private final String POINT_FILE_NAME = "Duraklar";
@@ -33,8 +33,8 @@ class MapDataControllerTest {
         String fileName = POINT_FILE_NAME;
 
         // when & then
-        ShpDto mapData = mapSHPDataService.getMapDataByShapeFile(fileName);
-        when(mapSHPDataService.getMapDataByShapeFile(POINT_FILE_NAME)).thenReturn(mapData);
+        ShpDto.ResData mapData = mapSHPDataService.getShpParserDataNoCache(fileName);
+        when(mapSHPDataService.getShpParserDataNoCache(POINT_FILE_NAME)).thenReturn(mapData);
 
         webTestClient.get().uri(String.format(GET_MAP_DATA_URI_FORMMAT, POINT_FILE_NAME))
                 .exchange()

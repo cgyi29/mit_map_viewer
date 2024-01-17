@@ -18,6 +18,7 @@ configurations {
 }
 
 repositories {
+    maven { url "https://repo.osgeo.org/repository/release/"}
     mavenCentral()
 }
 
@@ -27,6 +28,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
+
+    implementation group: 'org.geotools', name: 'gt-epsg-hsql', version: '22.1'
+    implementation group: 'org.geotools', name: 'gt-referencing', version: '22.1'
+    implementation group: 'org.geotools', name: 'gt-main', version: '22.1'
+    implementation group: 'org.geotools', name: 'gt-shapefile', version: '22.1'
+
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
