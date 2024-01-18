@@ -1,9 +1,10 @@
 package com.tmap.mit.map_viewer.controller;
 
 import com.tmap.mit.map_viewer.dto.DbfDto;
+import com.tmap.mit.map_viewer.dto.FeatureDto;
 import com.tmap.mit.map_viewer.dto.ShpDto;
-import com.tmap.mit.map_viewer.service.DbfParserServic;
-import com.tmap.mit.map_viewer.service.ShpParserServic;
+import com.tmap.mit.map_viewer.service.DbfParserService;
+import com.tmap.mit.map_viewer.service.ShpParserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,17 +21,13 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @RequestMapping("/mapData")
 public class MapDataController {
-    private final ShpParserServic shpParserService;
-    private final DbfParserServic dbfParserServic;
+    private final ShpParserService shpParserService;
+    private final DbfParserService dbfParserService;
 
     @GetMapping("/shp/{fileName}")
-    public ResponseEntity<ShpDto.ResData> getShpParserDataByShapeFile(@PathVariable String fileName) throws IOException {
-        return  ResponseEntity.ok().body(shpParserService.getShpParserDataWithCache(fileName));
-    }
-
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/dbf/{fileName}")
-    public ResponseEntity<DbfDto.ResData> getDbfParserDataByShapeFile(@PathVariable String fileName) throws IOException {
-        return  ResponseEntity.ok().body(dbfParserServic.getDbfParserDataWithCache(fileName));
+    public ResponseEntity<FeatureDto> getShpParserDataByShapeFile(@PathVariable String fileName) throws IOException {
+        ShpDto.ResData geometry = shpParserService.getShpParserDataWithCache(fileName);
+        DbfDto.ResData property = dbfParserService.getDbfParserDataWithCache(fileName);
+        return  ResponseEntity.ok().body(new FeatureDto(geometry, property));
     }
 }

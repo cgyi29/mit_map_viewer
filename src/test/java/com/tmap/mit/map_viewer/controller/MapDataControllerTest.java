@@ -1,7 +1,7 @@
 package com.tmap.mit.map_viewer.controller;
 
 import com.tmap.mit.map_viewer.dto.ShpDto;
-import com.tmap.mit.map_viewer.service.ShpParserServic;
+import com.tmap.mit.map_viewer.service.ShpParserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ class MapDataControllerTest {
     private WebTestClient webTestClient;
 
     @MockBean
-    private ShpParserServic mapSHPDataService;
+    private ShpParserService mapSHPDataService;
 
     private final String GET_MAP_DATA_URI_FORMMAT = "/mapData/%s";
     private final String POINT_FILE_NAME = "Duraklar";

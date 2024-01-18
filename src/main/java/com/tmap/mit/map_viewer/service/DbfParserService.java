@@ -2,7 +2,6 @@ package com.tmap.mit.map_viewer.service;
 
 import com.tmap.mit.map_viewer.constant.DbfFile;
 import com.tmap.mit.map_viewer.dto.DbfDto;
-import com.tmap.mit.map_viewer.dto.ShpDto;
 import com.tmap.mit.map_viewer.utils.FileReadUtils;
 import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-public class DbfParserServic{
+public class DbfParserService {
     @Cacheable(cacheNames = "getDbfParserData", key = "'getDbfParserData:'+#fileName")
     public DbfDto.ResData getDbfParserDataWithCache(String fileName) throws IOException {
         return this.getDbfParserDataNoCache(fileName);

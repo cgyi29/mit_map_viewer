@@ -4,7 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.tmap.mit.map_viewer.cd.CaffeineCacheType;
 import com.tmap.mit.map_viewer.cd.TargetFile;
-import com.tmap.mit.map_viewer.service.ShpParserServic;
+import com.tmap.mit.map_viewer.service.ShpParserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -21,7 +21,7 @@ import java.io.IOException;
 @Configuration
 @RequiredArgsConstructor
 public class CaffeineCacheConfig {
-    private final ShpParserServic shpParserServic;
+    private final ShpParserService shpParserService;
 
     @Bean
     public CacheManager caffeineConfig() {
@@ -40,6 +40,6 @@ public class CaffeineCacheConfig {
         return cacheManager;
     }
     private Object loadDataFromService(String param) throws IOException {
-        return shpParserServic.getShpParserDataNoCache(param);
+        return shpParserService.getShpParserDataNoCache(param);
     }
 }

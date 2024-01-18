@@ -18,7 +18,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class ShpParserServic {
+public class ShpParserService {
     @Cacheable(cacheNames = "getShpParserData", key = "'getShpParserData:'+#fileName")
     public ShpDto.ResData getShpParserDataWithCache(String fileName) throws IOException {
         return this.getShpParserDataNoCache(fileName);
