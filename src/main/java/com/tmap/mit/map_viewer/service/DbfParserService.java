@@ -92,7 +92,7 @@ public class DbfParserService {
     }
 
     private Object parseData(byte[] data, char type, int decimalCount){
-        String dataString = new String(data).trim();
+        String dataString = new String(data, StandardCharsets.ISO_8859_1).trim();
         if (StringUtils.isBlank(dataString))  return null;
 
         return switch (type) {
