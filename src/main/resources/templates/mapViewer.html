@@ -13,165 +13,22 @@
         let dragStart = null;
         let currentCanvasId = '';
 
-        let pointProp = [];
-        let pointGeom = [];
-
-        let polyLineProp = [];
-        let polyLineGeom = [];
-
-        let polygonProp = [];
-        let polygonGeom = [];
-
         let feature = {
+            pointProp : [],
+            pointGeom : [],
+            polyLineProp : [],
+            polyLineGeom : [],
+            polygonProp : [],
+            polygonGeom : [],
             pointObj: null,
             polyLineObj: null,
             polygonObj: null,
             largestBbox: { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
         };
 
-        async function pointInit() {
-            if (!feature.pointObj) {
-                const response = await fetch('/mapData/shp/Duraklar');
-                if (response.ok) {
-                    const responseData = await response.json();
-                    feature.pointObj = responseData.geometry;
-                    pointProp = responseData.property.records;
-                    updateLargestBBox(responseData.geometry.bbox);
-                }
-            }
-        }
-
-        async function polygonInit(){
-            if (!feature.polygonObj) {
-                const response = await fetch('/mapData/shp/KoyMahalle');
-                if (response.ok) {
-                    const responseData = await response.json();
-                    feature.polygonObj = responseData.geometry;
-                    polygonProp = responseData.property.records;
-                    updateLargestBBox(responseData.geometry.bbox);
-                }
-            }
-        }
-
-        async function polyLineInit(){
-            if (!feature.polyLineObj) {
-                const response = await fetch('/mapData/shp/Hatlar');
-                if (response.ok) {
-                    const responseData = await response.json();
-                    feature.polyLineObj = responseData.geometry;
-                    polyLineProp = responseData.property.records;
-                    updateLargestBBox(responseData.geometry.bbox);
-                }
-            }
-        }
-
-        async function drawPointCanvasMap(){
-            const shapeData = await feature.pointObj;
-            const points = await shapeData.points;
-            const bbox = await  shapeData.bbox;
-
-            const mapCanvas = document.getElementById('pointMapCanvas');
-            if(mapCanvas.getContext) {
-                const ctx = mapCanvas.getContext('2d');
-                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-                ctx.save(); // translate, style, 클리핑 경로
-                ctx.translate(panX, panY);
-                ctx.scale(zoom, zoom);
-                ctx.fillStyle='blue';
-
-                points.forEach((point, index) => {
-                    let trPoint = scalePoint(point.x, point.y, bbox, mapCanvas);
-                    ctx.beginPath();
-                    ctx.arc(trPoint.x, trPoint.y, 0.5, 0, 2 * Math.PI);
-                    ctx.fill();
-                    pointGeom.push({x:trPoint.x, y:trPoint.y, index: index});
-                });
-                ctx.restore();
-            }
-        }
-
-        async function drawPolygonCanvasMap(){
-            const shapeData =  feature.polygonObj;
-            const polygonData = await shapeData.polyTypeDatas;
-            const bbox = await  shapeData.bbox;
-
-            const mapCanvas = await document.getElementById('polygonMapCanvas');
-            if(mapCanvas.getContext){
-                const ctx = await mapCanvas.getContext('2d');
-                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-                ctx.save();
-                ctx.translate(panX, panY);
-                ctx.scale(zoom, zoom);
-
-                polygonData.forEach(function(data){
-                    data.parts.forEach(function() {
-                        ctx.beginPath();
-
-                        let transformedPoint = [];
-                        data.points.forEach((pointData, index) => {
-                            let point = scalePoint(pointData.x, pointData.y, bbox, mapCanvas);
-                            transformedPoint.push(point);
-                            if (index === 0) {
-                                ctx.moveTo(point.x, point.y);
-                            } else {
-                                ctx.lineTo(point.x, point.y);
-                            }
-                        });
-                        ctx.fillStyle = "yellow";
-                        ctx.fill();
-                        ctx.stroke();
-                        polygonGeom.push(transformedPoint);
-                    });
-                });
-                ctx.restore();
-            }
-        }
-
-        async function drawPolyLineCanvasMap(){
-            const shapeData = await feature.polyLineObj;
-            const polyLineData = await shapeData.polyTypeDatas;
-            const bbox = await  shapeData.bbox;
-
-            const mapCanvas = await document.getElementById('polyLineMapCanvas');
-            if(mapCanvas.getContext){
-                const ctx = await mapCanvas.getContext('2d');
-                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-                ctx.save();
-                ctx.translate(panX, panY);
-                ctx.scale(zoom, zoom);
-                ctx.strokeStyle='red';
-
-                polyLineData.forEach(function(data){
-                    data.parts.forEach(function(part) {
-                        ctx.beginPath();
-                        let transformedPoint = [];
-                        data.points.forEach((pointData, index) => {
-                            let point = scalePoint(pointData.x, pointData.y, bbox, mapCanvas);
-                            transformedPoint.push(point);
-                            index === 0 ? ctx.moveTo(point.x, point.y) : ctx.lineTo(point.x, point.y);
-                        });
-                        ctx.stroke();
-                        polyLineGeom.push(transformedPoint);
-                    });
-                });
-                ctx.restore();
-            }
-        }
-
-        function updateLargestBBox(bbox) {
-            feature.largestBbox.minX = Math.min(feature.largestBbox.minX, bbox.minX);
-            feature.largestBbox.minY = Math.min(feature.largestBbox.minY, bbox.minY);
-            feature.largestBbox.maxX = Math.max(feature.largestBbox.maxX, bbox.maxX);
-            feature.largestBbox.maxY = Math.max(feature.largestBbox.maxY, bbox.maxY);
-        }
-
         $( function() {
-            $( "#sortable" ).sortable({
-                update: function(event, ui) {
-                    updateCanvasOrder();
-                }
-            });
-            $( "#sortable" ).disableSelection();
+            $( "#sortable" ).sortable({update: function(event, ui) {updateCanvasOrder();}});
+            $( "#sortable" ).disableSelection()
         });
 
         function updateCanvasOrder() {
@@ -198,11 +55,6 @@
             });
         }
 
-        function addClickEventListener(canvasId) {
-            const canvas = document.getElementById(canvasId);
-            canvas.addEventListener('click', onClick);
-        }
-
         function removeCommonEventListeners() {
             ['pointMapCanvas', 'polyLineMapCanvas', 'polygonMapCanvas'].forEach(canvasId => {
                 const canvas = document.getElementById(canvasId);
@@ -216,24 +68,140 @@
             });
         }
 
-        function displayPointAttr(closePoints){
-            document.getElementById('dataDisplay').innerHTML = closePoints.map(attr => JSON.stringify(attr, null, 2)).join('<br><br>');
+        function addClickEventListener(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            canvas.addEventListener('click', onClick);
         }
 
-        function displayPolyLineAttr(idx){
-            const attrData = polyLineProp[idx];
-            if (attrData) {
-                document.getElementById('dataDisplay').innerText = JSON.stringify(attrData, null, 2);
+        async function pointInit() {
+            if (!feature.pointObj) {
+                const response = await fetch('/mapData/shp/Duraklar');
+                if (response.ok) {
+                    const responseData = await response.json();
+                    feature.pointObj = responseData.geometry;
+                    feature.pointProp = responseData.property.records;
+                    updateLargestBBox(responseData.geometry.bbox);
+                }
             }
-
         }
 
-        function displayPolygonAttr(idx){
-            const attrData = polygonProp[idx];
-            if (attrData) {
-                document.getElementById('dataDisplay').innerText = JSON.stringify(attrData, null, 2);
+        async function polygonInit(){
+            if (!feature.polygonObj) {
+                const response = await fetch('/mapData/shp/KoyMahalle');
+                if (response.ok) {
+                    const responseData = await response.json();
+                    feature.polygonObj = responseData.geometry;
+                    feature.polygonProp = responseData.property.records;
+                    updateLargestBBox(responseData.geometry.bbox);
+                }
             }
+        }
 
+        async function polyLineInit(){
+            if (!feature.polyLineObj) {
+                const response = await fetch('/mapData/shp/Hatlar');
+                if (response.ok) {
+                    const responseData = await response.json();
+                    feature.polyLineObj = responseData.geometry;
+                    feature.polyLineProp = responseData.property.records;
+                    updateLargestBBox(responseData.geometry.bbox);
+                }
+            }
+        }
+
+        async function drawPointCanvasMap(){
+            const shapeData = await feature.pointObj;
+            const points = await shapeData.points;
+            const bbox = await  shapeData.bbox;
+
+            const mapCanvas = document.getElementById('pointMapCanvas');
+            if(mapCanvas.getContext) {
+                const ctx = mapCanvas.getContext('2d');
+                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+                ctx.save(); // translate, style, 클리핑 경로
+                ctx.translate(panX, panY);
+                ctx.scale(zoom, zoom);
+                ctx.fillStyle='blue';
+
+                points.forEach((point, index) => {
+                    let trPoint = scalePoint(point.x, point.y, bbox, mapCanvas);
+                    ctx.beginPath();
+                    ctx.arc(trPoint.x, trPoint.y, 0.5, 0, 2 * Math.PI);
+                    ctx.fill();
+                    feature.pointGeom.push({x:trPoint.x, y:trPoint.y, index: index});
+                });
+                ctx.restore();
+            }
+        }
+
+        async function drawPolyLineCanvasMap(){
+            const shapeData = await feature.polyLineObj;
+            const polyLineData = await shapeData.polyTypeDatas;
+            const bbox = await  shapeData.bbox;
+
+            const mapCanvas = await document.getElementById('polyLineMapCanvas');
+            if(mapCanvas.getContext){
+                const ctx = await mapCanvas.getContext('2d');
+                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+                ctx.save();
+                ctx.translate(panX, panY);
+                ctx.scale(zoom, zoom);
+                ctx.strokeStyle='red';
+
+                polyLineData.forEach(function(data){
+                    data.parts.forEach(function() {
+                        ctx.beginPath();
+                        let transformedPoint = [];
+                        data.points.forEach((pointData, index) => {
+                            let point = scalePoint(pointData.x, pointData.y, bbox, mapCanvas);
+                            transformedPoint.push(point);
+                            index === 0 ? ctx.moveTo(point.x, point.y) : ctx.lineTo(point.x, point.y);
+                        });
+                        ctx.stroke();
+                        feature.polyLineGeom.push(transformedPoint);
+                    });
+                });
+                ctx.restore();
+            }
+        }
+
+        async function drawPolygonCanvasMap(){
+            const shapeData =  feature.polygonObj;
+            const polygonData = await shapeData.polyTypeDatas;
+            const bbox = await  shapeData.bbox;
+
+            const mapCanvas = await document.getElementById('polygonMapCanvas');
+            if(mapCanvas.getContext){
+                const ctx = await mapCanvas.getContext('2d');
+                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+                ctx.save();
+                ctx.translate(panX, panY);
+                ctx.scale(zoom, zoom);
+
+                polygonData.forEach(function(data){
+                    data.parts.forEach(function() {
+                        ctx.beginPath();
+                        let transformedPoint = [];
+                        data.points.forEach((pointData, index) => {
+                            let point = scalePoint(pointData.x, pointData.y, bbox, mapCanvas);
+                            transformedPoint.push(point);
+                            index === 0 ? ctx.moveTo(point.x, point.y):ctx.lineTo(point.x, point.y);
+                        });
+                        ctx.fillStyle = "yellow";
+                        ctx.fill();
+                        ctx.stroke();
+                        feature.polygonGeom.push(transformedPoint);
+                    });
+                });
+                ctx.restore();
+            }
+        }
+
+        function updateLargestBBox(bbox) {
+            feature.largestBbox.minX = Math.min(feature.largestBbox.minX, bbox.minX);
+            feature.largestBbox.minY = Math.min(feature.largestBbox.minY, bbox.minY);
+            feature.largestBbox.maxX = Math.max(feature.largestBbox.maxX, bbox.maxX);
+            feature.largestBbox.maxY = Math.max(feature.largestBbox.maxY, bbox.maxY);
         }
 
         function onClick(event){
@@ -249,15 +217,15 @@
             if(currentCanvasId === 'polyLineMapCanvas' ){
                 const closestPolyLine = findClosestPolyLine(x,y);
                 if(closestPolyLine != null){
-                    displayPolyLineAttr(closestPolyLine.index);
+                    displayPolyLineProp(closestPolyLine.index);
                 }
             }
 
             if(currentCanvasId === 'polygonMapCanvas'){
                 const clickPoint = { x: x, y: y};
-                for (let i = 0; i < polygonGeom.length; i++) {
-                    if (isPointInPolygon(clickPoint, polygonGeom[i])) {
-                        displayPolygonAttr(i);
+                for (let i = 0; i < feature.polygonGeom.length; i++) {
+                    if (isPointInPolygon(clickPoint, feature.polygonGeom[i])) {
+                        displayPolygonProp(i);
                         break;
                     }
                 }
@@ -265,15 +233,15 @@
 
             if(currentCanvasId === 'pointMapCanvas') {
                 const clickRadius = 10; // 클릭 반경 설정
-                const closePoints = pointGeom
+                const closePoints = feature.pointGeom
                     .map((pointData, index) => {
                         const distance = Math.hypot(pointData.x - x, pointData.y - y);
                         return { pointData, distance, index };
                     })
                     .filter(point => point.distance <= clickRadius)
                     .sort((a, b) => a.distance - b.distance)
-                    .map(point => pointProp[point.index]);
-                displayPointAttr(closePoints);
+                    .map(point => feature.pointProp[point.index]);
+                displayPointProp(closePoints);
 
             }
         }
@@ -295,7 +263,7 @@
             let minDistance = Infinity;
             let closestPolyLineIndex = null;
 
-            polyLineGeom.forEach((line, index) => {
+            feature.polyLineGeom.forEach((line, index) => {
                 for (let i = 0; i < line.length - 1; i++) {
                     let distance = distanceToLineSegment(clickX, clickY, line[i].x, line[i].y, line[i + 1].x, line[i + 1].y);
                     if (distance < minDistance) {
@@ -337,7 +305,17 @@
             return Math.sqrt(dx * dx + dy * dy);
         }
 
+        function displayPolygonProp(idx){
+            document.getElementById('dataDisplay').innerText = JSON.stringify(feature.polygonProp[idx], null, 2);
+        }
 
+        function displayPointProp(closePoints){
+            document.getElementById('dataDisplay').innerHTML = closePoints.map(attr => JSON.stringify(attr, null, 2)).join('<br><br>');
+        }
+
+        function displayPolyLineProp(idx){
+            document.getElementById('dataDisplay').innerText = JSON.stringify(feature.polyLineProp[idx], null, 2);
+        }
 
         function scalePoint(x, y, bbox, canvas) {
             let largestBbox = feature.largestBbox;
