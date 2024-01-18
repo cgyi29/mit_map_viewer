@@ -27,8 +27,9 @@
         };
 
         $( function() {
-            $( "#sortable" ).sortable({update: function(event, ui) {updateCanvasOrder();}});
-            $( "#sortable" ).disableSelection()
+            let sortable = $( "#sortable" );
+            sortable.sortable({update: function(event, ui) {updateCanvasOrder();}});
+            sortable.disableSelection()
         });
 
         function updateCanvasOrder() {
@@ -75,7 +76,7 @@
 
         async function pointInit() {
             if (!feature.pointObj) {
-                const response = await fetch('/mapData/shp/Duraklar');
+                const response = await fetch('/map/feature/Duraklar');
                 if (response.ok) {
                     const responseData = await response.json();
                     feature.pointObj = responseData.geometry;
@@ -87,7 +88,7 @@
 
         async function polygonInit(){
             if (!feature.polygonObj) {
-                const response = await fetch('/mapData/shp/KoyMahalle');
+                const response = await fetch('/map/feature/KoyMahalle');
                 if (response.ok) {
                     const responseData = await response.json();
                     feature.polygonObj = responseData.geometry;
@@ -99,7 +100,7 @@
 
         async function polyLineInit(){
             if (!feature.polyLineObj) {
-                const response = await fetch('/mapData/shp/Hatlar');
+                const response = await fetch('/map/feature/Hatlar');
                 if (response.ok) {
                     const responseData = await response.json();
                     feature.polyLineObj = responseData.geometry;
@@ -277,11 +278,7 @@
         }
 
         function distanceToLineSegment(x, y, x1, y1, x2, y2) {
-            const A = x - x1;
-            const B = y - y1;
-            const C = x2 - x1;
-            const D = y2 - y1;
-
+            const A = x-x1, B = y-y1, C = x2-x1, D = y2-y1;
 
             const dot = A * C + B * D;
             const len_sq = C * C + D * D;

@@ -19,12 +19,12 @@ import java.io.IOException;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/mapData")
+@RequestMapping("/map")
 public class MapDataController {
     private final ShpParserService shpParserService;
     private final DbfParserService dbfParserService;
 
-    @GetMapping("/shp/{fileName}")
+    @GetMapping("/feature/{fileName}")
     public ResponseEntity<FeatureDto> getShpParserDataByShapeFile(@PathVariable String fileName) throws IOException {
         ShpDto.ResData geometry = shpParserService.getShpParserDataWithCache(fileName);
         DbfDto.ResData property = dbfParserService.getDbfParserDataWithCache(fileName);
