@@ -12,6 +12,8 @@
         let panY = 0;
         let dragStart = null;
         let currentCanvasId = '';
+        let lineWidth = 1;
+        let pointSize = 1;
 
         let feature = {
             pointProp : [],
@@ -127,7 +129,7 @@
                 points.forEach((point, index) => {
                     let trPoint = scalePoint(point.x, point.y, bbox, mapCanvas);
                     ctx.beginPath();
-                    ctx.arc(trPoint.x, trPoint.y, 0.5, 0, 2 * Math.PI);
+                    ctx.arc(trPoint.x, trPoint.y, pointSize, 0, 2 * Math.PI);
                     ctx.fill();
                     feature.pointGeom.push({x:trPoint.x, y:trPoint.y, index: index});
                 });
@@ -148,6 +150,7 @@
                 ctx.translate(panX, panY);
                 ctx.scale(zoom, zoom);
                 ctx.strokeStyle='red';
+                ctx.lineWidth= lineWidth;
 
                 polyLineData.forEach(function(data){
                     data.parts.forEach(function() {
@@ -178,6 +181,7 @@
                 ctx.save();
                 ctx.translate(panX, panY);
                 ctx.scale(zoom, zoom);
+                ctx.lineWidth= lineWidth;
 
                 polygonData.forEach(function(data){
                     data.parts.forEach(function() {
@@ -351,6 +355,10 @@
             const worldX = (cursorX - panX) / zoom;
             const worldY = (cursorY - panY) / zoom;
             zoom *= scaleAmount;
+
+            lineWidth = 1/ zoom;
+            pointSize = 1.5/zoom;
+
             panX = cursorX - worldX * zoom;
             panY = cursorY - worldY * zoom;
             drawCanvas();
