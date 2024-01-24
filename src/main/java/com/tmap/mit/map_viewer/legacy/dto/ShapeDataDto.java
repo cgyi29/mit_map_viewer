@@ -1,0 +1,16 @@
+package com.tmap.mit.map_viewer.legacy.dto;
+
+import lombok.Getter;
+
+import java.util.Map;
+
+@Getter
+public class ShapeDataDto {
+    private ShpDto.Point geometry;
+    private Map<String, Object> attributes;
+
+    public ShapeDataDto(ShpDto.Point geometry, Map<String, Object> attributes){
+        this.geometry = geometry;
+        this.attributes = attributes;
+    }
+}
