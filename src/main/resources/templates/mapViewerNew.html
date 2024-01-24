@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/html" lang="en">
+<th:head>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+
+    <script th:inline="javascript">
+        async function pointInit() {
+            const response = await fetch('/v2/map/feature/tr');
+            if (response.ok) {
+
+            }
+        }
+
+        window.onload = async function() {
+            await pointInit();
+        }
+    </script>
+</th:head>
+<th:body>
+    <div id="canvasContainer" style="position: relative; width: 800px; height: 500px;">
+        <canvas id="pointMapCanvas" width="800" height="500" style="position: absolute; top: 0; left: 0; border:1px solid"></canvas>
+        <canvas id="polyLineMapCanvas" width="800" height="500" style="position: absolute; top: 0; left: 0; border:1px solid"></canvas>
+        <canvas id="polygonMapCanvas" width="800" height="500" style="position: absolute; top: 0; left: 0; border:1px solid"></canvas>
+    </div>
+    <div id="layerList" style="margin-top: 10px; width: 800px; border: 1px solid black;">
+        <ul id="sortable">
+            <li class="ui-state-default" data-canvasid="pointMapCanvas">Point Canvas</li>
+            <li class="ui-state-default" data-canvasid="polyLineMapCanvas">Polyline Canvas</li>
+            <li class="ui-state-default" data-canvasid="polygonMapCanvas">Polygon Canvas</li>
+        </ul>
+    </div>
+
+    <div id="dataDisplay" style="border: 1px solid black; margin-top: 10px; width: 800px; height: 100px;"></div>
+</th:body>
+
+</html>
