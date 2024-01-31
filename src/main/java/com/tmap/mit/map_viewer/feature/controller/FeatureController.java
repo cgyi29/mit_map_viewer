@@ -18,14 +18,15 @@ import javax.validation.Valid;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v2/map")
+@Validated
 public class FeatureController {
     private final FeatureService featureCollectionService;
 
     @GetMapping("/feature/{country}/{x}/{y}")
     public ResponseEntity<FeatureCollection> getFeatureCollectionByCountryName(
-            @CountryValid @PathVariable String country,
-            @PathVariable double x,
-            @PathVariable double y) {
+            @PathVariable("country") @CountryValid String country,
+            @PathVariable("x") double x,
+            @PathVariable("y") double y) {
         String countryUpper = country.toLowerCase();
         return  ResponseEntity.ok().body(featureCollectionService.getFeatureCollectionByCountryNameWithCache(countryUpper, x, y));
     }
