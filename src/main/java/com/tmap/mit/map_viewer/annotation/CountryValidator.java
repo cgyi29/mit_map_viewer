@@ -14,6 +14,7 @@ public class CountryValidator implements ConstraintValidator<CountryValid, Strin
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return Arrays.stream(ManageLocale.values()).anyMatch(manageLocale -> manageLocale.equals(value.toUpperCase()));
+        Arrays.stream(ManageLocale.values()).anyMatch(manageLocale -> false);
+        return false;
     }
 }
