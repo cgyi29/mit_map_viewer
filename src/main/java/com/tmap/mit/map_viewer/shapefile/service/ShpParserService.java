@@ -8,7 +8,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteOrder;
@@ -26,7 +25,6 @@ public class ShpParserService {
     }
 
     public ShpDto.ResData getShpParserDataNoCache(String path, String fileName) throws IOException {
-
         ClassPathResource resource = new ClassPathResource(String.format(ShpFile.SHP_FILE_PATH_FORMAT_NEW, path, fileName));
         try (FileChannel channel = new FileInputStream(resource.getFile()).getChannel()) {
             MappedByteBuffer headerBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, ShpFile.HEADER_SIZE);
@@ -37,8 +35,10 @@ public class ShpParserService {
                     headerBuffer.getDouble(ShpFile.IDX_HEADER_MIN_X), headerBuffer.getDouble(ShpFile.IDX_HEADER_MIN_Y),
                     headerBuffer.getDouble(ShpFile.IDX_HEADER_MAX_X), headerBuffer.getDouble(ShpFile.IDX_HEADER_MAX_Y));
 
-            List<Object> coordinates = new ArrayList<>();
+            List<ShpDto.CoordinateInfo> coordinateInfo = new ArrayList<>();
             List<ShpDto.BoundingBox> recordBboxs = new ArrayList<>();
+            int[] parts = new int[0];
+
 
             boolean isPolyType = ShapeType.POLY.contains(shapeTypeCode);
             long position = ShpFile.HEADER_SIZE;
@@ -53,10 +53,12 @@ public class ShpParserService {
                 MappedByteBuffer contentBuffer = channel.map(FileChannel.MapMode.READ_ONLY, position + ShpFile.RECORD_HEADER_SIZE, contentLength);
                 contentBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
+                List<ShpDto.Coordinates> coordinates = new ArrayList<>();
                 if (ShapeType.POINT.getCode().equals(shapeTypeCode)) {
                     coordinates.add(new ShpDto.Coordinates(
                             contentBuffer.getDouble(ShpFile.IDX_RECORD_CONTENT_POINT_TYPE_X),
                             contentBuffer.getDouble(ShpFile.IDX_RECORD_CONTENT_POINT_TYPE_Y)));
+                    coordinateInfo.add(new ShpDto.CoordinateInfo(coordinates, parts, recordBboxs));
                 }
 
                 if (isPolyType) {
@@ -69,7 +71,7 @@ public class ShpParserService {
                     int numParts = contentBuffer.getInt(ShpFile.IDX_RECORD_CONTENT_NUM_PARTS);
                     int numPoints = contentBuffer.getInt(ShpFile.IDX_RECORD_CONTENT_NUM_POINTS);
 
-                    int[] parts = new int[numParts];
+                    parts = new int[numParts];
                     int idxPartsStart = ShpFile.IDX_RECORD_CONTENT_PARTS;
                     for (int i = 0; i < numParts; i++) {
                         parts[i] = contentBuffer.getInt(idxPartsStart);
@@ -86,12 +88,13 @@ public class ShpParserService {
                         idxPolyY += Double.BYTES * 2;
                         polyPoints.add(new ShpDto.Coordinates(x, y));
                     }
-                    coordinates.add(polyPoints);
+                    coordinateInfo.add(new ShpDto.CoordinateInfo(polyPoints, parts, recordBboxs));
                 }
+
                 position += ShpFile.RECORD_HEADER_SIZE + contentLength;
             }
 
-            return new ShpDto.ResData(ShapeType.getShapeTypeByCode(shapeTypeCode), bbox, coordinates);
+            return new ShpDto.ResData(ShapeType.getShapeTypeByCode(shapeTypeCode).name(), bbox, coordinateInfo);
         }
     }
 }

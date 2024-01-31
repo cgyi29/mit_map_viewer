@@ -4,17 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.io.IOException;
 @Slf4j
-@ControllerAdvice
+//@ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(Exception.class)
+    //@ExceptionHandler(Exception.class)
     public Object handleException(Exception ex, WebRequest request) {
         log.error(String.valueOf(ex));
         if (isRestApiRequest(request)) {

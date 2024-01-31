@@ -63,11 +63,11 @@ public class DbfParserService {
             buffer.get(fieldNameBytes, 0, DbfFile.FIELD_NAME_BYTE);
             String fieldName = new String(fieldNameBytes, StandardCharsets.US_ASCII).trim();
             char fieldType = (char) (buffer.get() & 0xFF);
-            buffer.position(buffer.position() + 4); // Skip field descriptor array
+            buffer.position(buffer.position() + 4);
             int fieldLength = buffer.get() & 0xFF;
             int decimalCount = buffer.get() & 0xFF;
             fields.add(new DbfDto.FieldMetaData(fieldName, fieldType, fieldLength, decimalCount));
-            buffer.position(buffer.position() + 14); // Skip reserved bytes
+            buffer.position(buffer.position() + 14);
         }
         return fields;
     }

@@ -1,6 +1,9 @@
+
 spring:
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html
     mode: HTML
     cache: false
+server:
+  port: 9090

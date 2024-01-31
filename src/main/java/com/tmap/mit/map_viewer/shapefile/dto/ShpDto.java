@@ -2,20 +2,22 @@ package com.tmap.mit.map_viewer.shapefile.dto;
 
 import com.tmap.mit.map_viewer.shapefile.cd.ShapeType;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 public class ShpDto {
     @Getter
     public static class ResData {
-        private ShapeType type;
-        private BoundingBox bbox;
-        private List<Object> coordinates;
+        private final String type;
+        private final BoundingBox bbox;
+        private final List<CoordinateInfo> coordinateInfo;
 
-        public ResData(ShapeType type, BoundingBox bbox, List<Object> coordinates) {
+
+        public ResData(String type, BoundingBox bbox, List<CoordinateInfo> coordinateInfo) {
             this.type = type;
             this.bbox = bbox;
-            this.coordinates = coordinates;
+            this.coordinateInfo = coordinateInfo;
         }
     }
 
@@ -40,6 +42,20 @@ public class ShpDto {
         public Coordinates(double x, double y){
             this.x = x;
             this.y = y;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class CoordinateInfo {
+        private List<Coordinates> coordinates;
+        private int[] parts;
+        private List<ShpDto.BoundingBox> recordBboxs;
+
+        public CoordinateInfo(List<Coordinates> coordinates, int[] parts, List<ShpDto.BoundingBox> recordBboxs){
+            this.coordinates = coordinates;
+            this.parts = parts;
+            //this.recordBboxs = recordBboxs;
         }
     }
 }

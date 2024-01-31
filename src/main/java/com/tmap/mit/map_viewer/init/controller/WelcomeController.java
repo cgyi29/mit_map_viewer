@@ -9,13 +9,8 @@ import reactor.core.publisher.Mono;
  */
 @Controller
 public class WelcomeController {
-    @GetMapping("")
-    public Mono<String> getView() {
-        return Mono.just("mapViewer");
-    }
-
     @GetMapping("/v2")
     public Mono<String> getViewNew() {
-        return Mono.just("mapViewerNew");
+        return Mono.just("mapViewer");
     }
 }
