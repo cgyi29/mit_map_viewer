@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+
 @Slf4j
-@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v2/map")
@@ -21,7 +22,10 @@ public class FeatureController {
     private final FeatureService featureCollectionService;
 
     @GetMapping("/feature/{country}/{x}/{y}")
-    public ResponseEntity<FeatureCollection> getFeatureCollectionByCountryName(@CountryValid @PathVariable String country, @PathVariable double x, @PathVariable double y) {
+    public ResponseEntity<FeatureCollection> getFeatureCollectionByCountryName(
+            @CountryValid @PathVariable String country,
+            @PathVariable double x,
+            @PathVariable double y) {
         String countryUpper = country.toLowerCase();
         return  ResponseEntity.ok().body(featureCollectionService.getFeatureCollectionByCountryNameWithCache(countryUpper, x, y));
     }

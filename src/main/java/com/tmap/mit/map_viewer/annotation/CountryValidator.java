@@ -7,14 +7,17 @@ import javax.validation.ConstraintValidatorContext;
 import java.util.Arrays;
 
 public class CountryValidator implements ConstraintValidator<CountryValid, String> {
-
     @Override
     public void initialize(CountryValid constraintAnnotation) {
     }
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        Arrays.stream(ManageLocale.values()).anyMatch(manageLocale -> false);
-        return false;
+        if (value == null || value.trim().isEmpty()) {
+            return false;
+        }
+
+        return Arrays.stream(ManageLocale.values())
+                .anyMatch(manageLocale -> manageLocale.name().equalsIgnoreCase(value.trim()));
     }
 }

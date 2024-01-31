@@ -1,18 +1,15 @@
 package com.tmap.mit.map_viewer.annotation;
 
 import javax.validation.Constraint;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import javax.validation.Payload;
+import java.lang.annotation.*;
 
-@Target({ElementType.TYPE_USE, ElementType.FIELD})
-@Retention(RetentionPolicy.RUNTIME)
+@Documented
 @Constraint(validatedBy = CountryValidator.class)
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
 public @interface CountryValid {
         String message() default "잘못 된 country 값이 감지 되었습니다.";
-
-        Class[] groups() default {};
-
-        Class[] payload() default {};
+        Class<?>[] groups() default {};
+        Class<? extends Payload>[] payload() default {};
 }

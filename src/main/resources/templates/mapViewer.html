@@ -208,7 +208,9 @@
             const rect = mapCanvas.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            const transformedClick = { x: x, y: y };
+            const canvasX = (x-panX) /zoom;
+            const canvasY = (y-panY) /zoom;
+
 
             let featuresInBBox = [];
 
@@ -232,8 +234,9 @@
                 if (isPolygonIntersectingBBox(currentRectBbox, polygon.geometry.coordinatesInfo.coordinates)) {
                     featuresInBBox.push(polygon.properties.combinedInfo);
                     selectedPolygons.push(polygon);
+                    return;
                 }
-                if (isPointInPolygon(transformedClick, polygon.geometry.coordinatesInfo.coordinates)) {
+                if (isPointInPolygon({x:canvasX, y:canvasY}, polygon.geometry.coordinatesInfo.coordinates)) {
                     featuresInBBox.push(polygon.properties.combinedInfo);
                     selectedPolygons.push(polygon);
                 }
