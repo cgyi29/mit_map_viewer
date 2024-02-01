@@ -66,6 +66,7 @@ public class STRtreeExample {
         STRtree strTree = new STRtree();
 
         // 예제 데이터
+        // Envelope로 공간 경계 정의
         strTree.insert(new Envelope(0, 0, 3, 3), "공간 1");
         strTree.insert(new Envelope(4, 2, 6, 5), "공간 2");
         strTree.insert(new Envelope(7, 5, 9, 9), "공간 3");
