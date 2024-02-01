@@ -8,22 +8,28 @@
   * Gradle
   * lombok
   * webflux
+  * caffein cache
 * Front-End
   * html
+  * thymeleaf
   * java script
 
 ## 프로젝트 패키지 구성
 * src.main.java.com.tmap.mit.map_viewer
+    * annotation (custom valid annotation 및 차후에 Redis cache 등을 aop 사용해서 annotation으로 제작 예정)  
     * cd (file 내에서 정의 된 code 값을 정의하고 검증 로직을 분리하기 위해서 생성)
-    * config (todo - cache 처리 등 어플리케이션 고도화에 필요한 config 추가 예정)
+    * config (application 내의 각종 설정이 추가 되어 있음 - 현재는 caffein cache 설정 되어 있음)
+    * error (application에서 발생하는 error 처리)
     * constant (자주 사용되는 상수 설정 - 현재 shape file parsing 작업 중이라 이해하기 쉽도록 file 구조 기준으로 나누어 상수 정의)
-    * controller (view를 return하거나 api 형태로 지도 데이터 추출 데이터를 전달하는 기능 정의)
-    * dto (view로 넘겨주는 지도 데이터 중 유의미한 데이터 기준으로 dto 정의)
-    * error (todo - 향후에 공통화된 error 처리 추가 예정)
-    * service (실제로 지도 데이터를 추출하는 기능)
+    * feature (feature geometry, property를 가공하거나 데이터 호출)
+    * init (기본 url 최초 접근에 대한 처리, cache에 application 실행 시점에 cache warm up을 하기 위한 작업 들어갈 예정인데 todo일뿐임)
+    * shapefile (jts 라이브러리는 shapefile이 별도의 jar로 빠져있는 것 확인 용도가 명확해서 좋았음. 비슷한 아이디어로 분리함)
+    * utils (application 내에서 공통으로 관리할 수 있는 기능들 정의)
 * src.main.resource
-    * files (shp/dbf/shx 파일이 존재하는 패키지)
+    * files (kr, tr등 lang_culture 중 culture(country) 값을 기준으로 패키지를 나누어 각 국가별 shp/dbf/shx 파일이 존재하는 패키지)
+    * js (view html 내에서 사용하는 js를 기능별로 나누어 관리하는 파일) 
     * templates (view html)
+    * favicon.ico 존재 
 * src.test.java.com.tmap.mit.map_viewer
     * controller (controller test code - BBD 형태)
 
@@ -35,7 +41,7 @@ sequenceDiagram
     participant ParsingAPI
     participant MapFile
     Server->>ParsingAPI: 각 타입(point/polyline/polygon)<br>공간 데이터 요청
-    ParsingAPI->>MapFile: 현재는 .shp 파일만을 read 해 옴
+    ParsingAPI->>MapFile: dbf, shx, shp 파일을 파싱해서 <br> 요청한 국가의 feature들을 가지고 옴
     Note over ParsingAPI, MapFile: header, record 구간에서 제공 해 주는<br>Byte 정보를 읽어와서 dto 생성  
     ParsingAPI->>Server: 파싱 된 공간 데이터 기반으로 화면상에 그려줌
 ```
@@ -43,7 +49,6 @@ sequenceDiagram
 ## 프로젝트 테스트 코드 구성 
 1. MapDataControllerTest.class - 지도 데이터 추출 api 컨트롤러 테스트
     * givenFileName_whenGetMapDataByShapeFile_thenResponseCheck
-      
       response status이 200인지 정도만 체크중임
       
 
@@ -57,4 +62,11 @@ sequenceDiagram
 ## 프로젝트 1차 피드백
 1. QGIS 밴치마킹 많이 해볼 것
 2. 파일 크기가 mb단위이다. 이런 상황에서 파일을 읽는 작업을 어떻게 효율화를 할 수 있는가?
-3. 비슷한 용어들을 찾아보고 모두 이해할 수 있도록 하자. 
+3. 비슷한 용어들을 찾아보고 모두 이해할 수 있도록 하자.
+
+## 프로젝트 N차 회고 (2024.02.01)
+1. buffer를 가지고 교차 지점을 찾아 property를 뿌려줄 때 어떻게 처리를 하는것이 좋은가?
+2. 각 공간 알고리즘이 무엇이 있고 어떻게 활용이 되고 있는가? 
+
+## 프로젝트 N차 피드백
+1. 
