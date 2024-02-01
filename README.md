@@ -58,6 +58,7 @@ sequenceDiagram
 4. Octree
 
 ## STRtree (Sort Tile Recursive Rtree 구현)
+
 <예제> 
 ```Java
 public class STRtreeExample {
@@ -84,6 +85,7 @@ public class STRtreeExample {
 
 `queryEnvelope`에 의해 정의된 영역과 겹치는 사각형을 찾음.
 공간 데이터를 인덱싱하여 특정 영역에 대해서 쿼리함.
+
 <결과>
 공간 1
 공간 2
