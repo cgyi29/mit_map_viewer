@@ -89,6 +89,7 @@ public class STRtreeExample {
 <결과>
 공간 1
 공간 2
+
 ![image](https://github.com/cgyi29/mit_map_viewer/assets/152146153/bfa46062-c5bf-43e1-9128-323816259eca)
 
 
