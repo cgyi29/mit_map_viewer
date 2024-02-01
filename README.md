@@ -53,9 +53,15 @@ sequenceDiagram
 
 ## 공간 알고리즘 정리 
 1. R-tree
+http://www.jidum.com/jidums/view.do?jidumId=159
 2. Quadtree
+https://devjourney7.tistory.com/116
 3. K-d tree
+https://dad-rock.tistory.com/589
 4. Octree
+https://ko.wikipedia.org/wiki/%ED%8C%94%EC%A7%84%ED%8A%B8%EB%A6%AC
+
+search (교차질의(현재 기준 구현 된 것), 포함질의(현재 기준 구현 된 것), 근접 질의)
 
 ## STRtree (Sort Tile Recursive Rtree 구현)
 
