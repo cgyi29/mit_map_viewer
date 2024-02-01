@@ -19,7 +19,7 @@
     * annotation (custom valid annotation 및 차후에 Redis cache 등을 aop 사용해서 annotation으로 제작 예정)  
     * cd (file 내에서 정의 된 code 값을 정의하고 검증 로직을 분리하기 위해서 생성)
     * config (application 내의 각종 설정이 추가 되어 있음 - 현재는 caffein cache 설정 되어 있음)
-    * error (application에서 발생하는 error 처리)
+    * error (application에서 발생하는 error 처리)
     * constant (자주 사용되는 상수 설정 - 현재 shape file parsing 작업 중이라 이해하기 쉽도록 file 구조 기준으로 나누어 상수 정의)
     * feature (feature geometry, property를 가공하거나 데이터 호출)
     * init (기본 url 최초 접근에 대한 처리, cache에 application 실행 시점에 cache warm up을 하기 위한 작업 들어갈 예정인데 todo일뿐임)
