@@ -50,7 +50,45 @@ sequenceDiagram
 1. MapDataControllerTest.class - 지도 데이터 추출 api 컨트롤러 테스트
     * givenFileName_whenGetMapDataByShapeFile_thenResponseCheck
       response status이 200인지 정도만 체크중임
-      
+
+## 공간 알고리즘 정리 
+1. R-tree
+2. Quadtree
+3. K-d tree
+4. Octree
+
+## STRtree (Sort Tile Recursive Rtree 구현)
+<예제> 
+```Java
+public class STRtreeExample {
+    public static void main(String[] args) {
+        STRtree strTree = new STRtree();
+
+        // 예제 데이터
+        strTree.insert(new Envelope(0, 0, 3, 3), "공간 1");
+        strTree.insert(new Envelope(4, 2, 6, 5), "공간 2");
+        strTree.insert(new Envelope(7, 5, 9, 9), "공간 3");
+
+        // 쿼리 영역
+        Envelope queryEnvelope = new Envelope(2, 2, 5, 5);
+
+        // 쿼리 실행 및 결과 출력
+        @SuppressWarnings("unchecked")
+        List<String> queryResults = (List<String>) strTree.query(queryEnvelope);
+        for (String result : queryResults) {
+            System.out.println(result);
+        }
+    }
+}
+```
+
+`queryEnvelope`에 의해 정의된 영역과 겹치는 사각형을 찾음.
+공간 데이터를 인덱싱하여 특정 영역에 대해서 쿼리함.
+<결과>
+공간 1
+공간 2
+![image](https://github.com/cgyi29/mit_map_viewer/assets/152146153/bfa46062-c5bf-43e1-9128-323816259eca)
+
 
 ## 프로젝트 1차 회고 (진행 1주차)
 1. QGIS 프로그램에서 세가지 파일(shp/dbf/shx)을 통해 읽어오는 정보들이 각각 어떤 데이터인지 대략적인 정보를 알게 됨
