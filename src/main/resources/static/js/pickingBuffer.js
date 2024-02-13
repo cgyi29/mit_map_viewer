@@ -37,15 +37,18 @@ function displayFeaturesInBBox(event) {
     });
 
     polygons.forEach(polygon => {
-        if (isPolygonIntersectingBBox(currentRectBbox, polygon.geometry.coordinatesInfo.coordinates)) {
-            featuresInBBox.push(polygon.properties.combinedInfo);
-            selectedPolygons.push(polygon);
-            return;
-        }
-        if (isPointInPolygon({x:canvasX, y:canvasY}, polygon.geometry.coordinatesInfo.coordinates)) {
-            featuresInBBox.push(polygon.properties.combinedInfo);
-            selectedPolygons.push(polygon);
-        }
+        polygon.geometryList.forEach((geometry) => {
+            if (isPolygonIntersectingBBox(currentRectBbox, geometry.coordinatesInfo.coordinates)) {
+                featuresInBBox.push(polygon.properties.combinedInfo);
+                selectedPolygons.push(polygon);
+                return;
+            }
+            if (isPointInPolygon({x:canvasX, y:canvasY}, geometry.coordinatesInfo.coordinates)) {
+                featuresInBBox.push(polygon.properties.combinedInfo);
+                selectedPolygons.push(polygon);
+            }
+        })
+
     });
 
     dataDisplay.innerHTML = JSON.stringify(featuresInBBox, null, 2);

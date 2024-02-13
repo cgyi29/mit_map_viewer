@@ -27,7 +27,6 @@ public class CaffeineCacheConfig {
     @Bean
     public CacheManager caffeineConfig() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-
         for(CaffeineCacheType cacheType : CaffeineCacheType.values()){
             for(ManageLocale locale : ManageLocale.values()) {
                 LoadingCache<Object, Object> loadingCache = Caffeine.newBuilder()

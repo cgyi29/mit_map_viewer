@@ -25,9 +25,9 @@ public class FeatureController {
     @GetMapping("/feature/{country}/{x}/{y}")
     public ResponseEntity<FeatureCollection> getFeatureCollectionByCountryName(
             @PathVariable("country") @CountryValid String country,
-            @PathVariable("x") double x,
-            @PathVariable("y") double y) {
+            @PathVariable("x") double canvasWidth,
+            @PathVariable("y") double canvasHeight) {
         String countryUpper = country.toLowerCase();
-        return  ResponseEntity.ok().body(featureCollectionService.getFeatureCollectionByCountryNameWithCache(countryUpper, x, y));
+        return  ResponseEntity.ok().body(featureCollectionService.getFeatureCollectionByCountryNameWithCache(countryUpper, canvasWidth, canvasHeight));
     }
 }

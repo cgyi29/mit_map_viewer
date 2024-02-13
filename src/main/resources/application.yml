@@ -6,4 +6,4 @@ spring:
     mode: HTML
     cache: false
 server:
-  port: 9090
+  port: 7070

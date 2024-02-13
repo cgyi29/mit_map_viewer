@@ -19,8 +19,6 @@ import org.thymeleaf.util.ArrayUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +39,7 @@ public class FeatureService {
             File dir = resource.getFile();
 
             List<Geometry> geometryList = new ArrayList<>();
+            Map<Integer, List<Geometry>> geometryMap = new HashMap<>();
             File[] shpFiles = getShpFileArray(dir);
             ShpDto.BoundingBox largestBbox = new ShpDto.BoundingBox(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, -Double.POSITIVE_INFINITY, -Double.POSITIVE_INFINITY);
             ShpDto.ResData shpData = null;
@@ -57,6 +56,15 @@ public class FeatureService {
                 for(ShpDto.ResData shpDt : shpDataList){
                     for(ShpDto.CoordinateInfo coordinateInfo: shpDt.getCoordinateInfo()){
                         geometryList.add(new Geometry(shpDt.getType(), dataConvertService.convertCoordinate(coordinateInfo, shpDt.getBbox(), largestBbox, x, y), shpDt.getBbox()));
+                    }
+
+                    Map<Integer, List<ShpDto.CoordinateInfo>> coordinateInfoMap = shpDt.getCoordinateInfoMap();
+                    for(Map.Entry<Integer, List<ShpDto.CoordinateInfo>> entry : coordinateInfoMap.entrySet()){
+                        List<Geometry> geometriesForRecord = new ArrayList<>();
+                        for(ShpDto.CoordinateInfo ci : entry.getValue()){
+                            geometriesForRecord.add(new Geometry(shpDt.getType(), dataConvertService.convertCoordinate(ci, shpDt.getBbox(), largestBbox, x, y), shpDt.getBbox()));
+                        }
+                        geometryMap.put(entry.getKey(), geometriesForRecord);
                     }
                 }
             }
@@ -76,6 +84,15 @@ public class FeatureService {
                 featureList.add(new Feature(new Geometry(geometry.getType(), geometry.getCoordinatesInfo(), geometry.getBbox(), largestBbox), new Properties(propertyList.get(init))));
                 init ++;
             }
+
+            for(Map.Entry<Integer, List<Geometry>> entry : geometryMap.entrySet()){
+                if(init < propertyList.size()) {
+                    List<Geometry> geometries = entry.getValue();
+                    featureList.add(new Feature(geometries, new Properties(propertyList.get(init))));
+                    init++;
+                }
+            }
+
 
             return new FeatureCollection(featureList);
         } catch (IOException e) {

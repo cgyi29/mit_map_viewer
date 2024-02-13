@@ -14,7 +14,9 @@ import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -35,23 +37,22 @@ public class ShpParserService {
                     headerBuffer.getDouble(ShpFile.IDX_HEADER_MIN_X), headerBuffer.getDouble(ShpFile.IDX_HEADER_MIN_Y),
                     headerBuffer.getDouble(ShpFile.IDX_HEADER_MAX_X), headerBuffer.getDouble(ShpFile.IDX_HEADER_MAX_Y));
 
+            Map<Integer, List<ShpDto.CoordinateInfo>> coordinateInfoMap = new HashMap<>();
             List<ShpDto.CoordinateInfo> coordinateInfo = new ArrayList<>();
             List<ShpDto.BoundingBox> recordBboxs = new ArrayList<>();
             int[] parts = new int[0];
+            int polygonIdx = 0;
 
-
-            boolean isPolyType = ShapeType.POLY.contains(shapeTypeCode);
             long position = ShpFile.HEADER_SIZE;
-
             while (position < channel.size()) {
                 MappedByteBuffer recordBuffer = channel.map(FileChannel.MapMode.READ_ONLY, position, ShpFile.RECORD_HEADER_SIZE);
                 recordBuffer.order(ByteOrder.BIG_ENDIAN);
 
                 if (recordBuffer.remaining() < ShpFile.RECORD_HEADER_SIZE) break;
                 int contentLength = recordBuffer.getInt(ShpFile.RECORD_HEADER_LENGTH) * 2;
-
                 MappedByteBuffer contentBuffer = channel.map(FileChannel.MapMode.READ_ONLY, position + ShpFile.RECORD_HEADER_SIZE, contentLength);
                 contentBuffer.order(ByteOrder.LITTLE_ENDIAN);
+
 
                 List<ShpDto.Coordinates> coordinates = new ArrayList<>();
                 if (ShapeType.POINT.getCode().equals(shapeTypeCode)) {
@@ -61,7 +62,7 @@ public class ShpParserService {
                     coordinateInfo.add(new ShpDto.CoordinateInfo(coordinates, parts, recordBboxs));
                 }
 
-                if (isPolyType) {
+                if (ShapeType.POLYLINE.getCode().equals(shapeTypeCode)) {
                     recordBboxs.add(new ShpDto.BoundingBox(
                             contentBuffer.getDouble(ShpFile.IDX_RECORD_CONTENT_POLY_MIN_X),
                             contentBuffer.getDouble(ShpFile.IDX_RECORD_CONTENT_POLY_MIN_Y),
@@ -91,10 +92,45 @@ public class ShpParserService {
                     coordinateInfo.add(new ShpDto.CoordinateInfo(polyPoints, parts, recordBboxs));
                 }
 
+                if (ShapeType.POLYGON.getCode().equals(shapeTypeCode)) {
+                    recordBboxs.add(new ShpDto.BoundingBox(
+                            contentBuffer.getDouble(ShpFile.IDX_RECORD_CONTENT_POLY_MIN_X),
+                            contentBuffer.getDouble(ShpFile.IDX_RECORD_CONTENT_POLY_MIN_Y),
+                            contentBuffer.getDouble(ShpFile.IDX_RECORD_CONTENT_POLY_MAX_X),
+                            contentBuffer.getDouble(ShpFile.IDX_RECORD_CONTENT_POLY_MAX_Y)));
+
+
+                    int numParts = contentBuffer.getInt(ShpFile.IDX_RECORD_CONTENT_NUM_PARTS);
+                    int numPoints = contentBuffer.getInt(ShpFile.IDX_RECORD_CONTENT_NUM_POINTS);
+                    parts = new int[numParts];
+                    for (int i = 0; i < numParts; i++) {
+                        parts[i] = contentBuffer.getInt(ShpFile.IDX_RECORD_CONTENT_PARTS + i * Integer.BYTES);
+                    }
+
+
+                    List<ShpDto.CoordinateInfo> partCoordinateInfoList = new ArrayList<>();
+                    int idxPointStart = ShpFile.IDX_RECORD_CONTENT_PARTS + numParts * Integer.BYTES;
+                    for (int partIndex = 0; partIndex < numParts; partIndex++) {
+                        int startIdx = parts[partIndex];
+                        int endIdx = (partIndex < numParts - 1) ? parts[partIndex + 1] : numPoints;
+
+
+                        List<ShpDto.Coordinates> polyPoints = new ArrayList<>();
+                        for (int i = startIdx; i < endIdx; i++) {
+                            double x = contentBuffer.getDouble(idxPointStart + i * Double.BYTES * 2);
+                            double y = contentBuffer.getDouble(idxPointStart + i * Double.BYTES * 2 + Double.BYTES);
+                            polyPoints.add(new ShpDto.Coordinates(x, y));
+                        }
+                        partCoordinateInfoList.add(new ShpDto.CoordinateInfo(polyPoints, new int[]{partIndex}, recordBboxs));
+                    }
+                    coordinateInfoMap.put(polygonIdx++, partCoordinateInfoList); // 각 Polygon 레코드마다 part별 CoordinateInfo를 map에 추가
+                }
+
+
                 position += ShpFile.RECORD_HEADER_SIZE + contentLength;
             }
 
-            return new ShpDto.ResData(ShapeType.getShapeTypeByCode(shapeTypeCode).name(), bbox, coordinateInfo);
+            return new ShpDto.ResData(ShapeType.getShapeTypeByCode(shapeTypeCode).name(), bbox, coordinateInfo, coordinateInfoMap);
         }
     }
 }

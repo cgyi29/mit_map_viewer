@@ -1,5 +1,4 @@
 let featureCollection = null;
-let largestBbox;
 
 let polyLines = [];
 let polygons = [];
@@ -8,23 +7,29 @@ let points = [];
 async function featureCollectionInit() {
     let mapCanvas = document.getElementById('mapCanvas');
     if (!featureCollection) {
-        const res = await fetch('/v2/map/feature/tr/'+mapCanvas.width+'/'+mapCanvas.height);
+        const res = await fetch('/v2/map/feature/kr/'+mapCanvas.width+'/'+mapCanvas.height);
         if (res.ok) {
             const resData = await res.json();
             featureCollection = Object.entries(resData)[0][1];
             featureCollection.forEach(feature => {
-                largestBbox = feature.geometry.largestBbox;
-                switch (feature.geometry.type) {
-                    case 'POINT': points.push(feature); break;
-                    case 'POLYLINE': polyLines.push(feature); break;
-                    case 'POLYGON': polygons.push(feature); break;
+                if(feature.geometry != null){
+                    switch (feature.geometry.type) {
+                        case 'POINT': points.push(feature); break;
+                        case 'POLYLINE': polyLines.push(feature); break;
+                    }
+                }else{
+                    polygons.push(feature);
                 }
             });
+            /*console.log(polyLines);
+            console.log(polygons);
+            console.log(points);*/
         }
     }
 }
 
 function drawPoint(ctx, pointsArr, color){
+    if(pointsArr.length === 0) return;
     let mapCanvas = document.getElementById('mapCanvas');
     if(mapCanvas.getContext) {
         pointSize = 1.5/zoom;
@@ -44,6 +49,7 @@ function drawPoint(ctx, pointsArr, color){
 }
 
 function drawPolyLine(ctx, polylineArr, color) {
+    if(polylineArr.length === 0) return;
     let mapCanvas = document.getElementById('mapCanvas');
     if (mapCanvas.getContext) {
         lineWidth = 1/zoom;
@@ -73,6 +79,7 @@ function drawPolyLine(ctx, polylineArr, color) {
 }
 
 function drawPolygon(ctx, polygonArr, color){
+    if(polygonArr.length === 0) return;
     let mapCanvas = document.getElementById('mapCanvas');
     if (mapCanvas.getContext) {
         lineWidth = 1/zoom;
@@ -84,10 +91,14 @@ function drawPolygon(ctx, polygonArr, color){
         ctx.strokeStyle = 'black'; // 선 색상 추가
 
         polygonArr.forEach((feature) => {
-            const coordinates = feature.geometry.coordinatesInfo.coordinates;
+            const geometryList = feature.geometryList;
             ctx.beginPath(); // 각 다각형 시작 시에 한 번만 호출
-            coordinates.forEach((coordinate, index) => {
-                index === 0 ? ctx.moveTo(coordinate.x, coordinate.y) : ctx.lineTo(coordinate.x, coordinate.y);
+            geometryList.forEach((geometry) => {
+                const coordinates = geometry.coordinatesInfo.coordinates;
+                coordinates.forEach((coordinate, index) => {
+                    index === 0 ? ctx.moveTo(coordinate.x, coordinate.y) : ctx.lineTo(coordinate.x, coordinate.y);
+                })
+
             });
             ctx.closePath(); // 다각형 닫기
             ctx.fill();
